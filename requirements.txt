@@ -1,0 +1,12 @@
+fastapi
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+pydantic
+starlette
+SQLAlchemy
+boto3
+aiogram
+alembic
+prometheus-fastapi-instrumentator
+sentry-sdk[fastapi]
