@@ -10,3 +10,4 @@ aiogram
 alembic
 prometheus-fastapi-instrumentator
 sentry-sdk[fastapi]
+uvicorn
