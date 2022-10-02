@@ -47,7 +47,6 @@ async def delete_user_view(session: AsyncSession = Depends(manager.get_session_o
     user_to_delete = UserFromDB(**current_user.__dict__)
     async with session.begin():
         user: Users = await get_user_model(session=session, username=user_to_delete.username)
-        print(user.created_recipes)
         for recipe in user.created_recipes:
             await session.delete(recipe)
         await session.delete(user)

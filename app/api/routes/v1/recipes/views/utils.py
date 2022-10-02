@@ -134,8 +134,6 @@ async def update_recipe_steps(
         session: AsyncSession
 ) -> None:
     new_steps = sorted(new_steps, key=lambda x: x.step_num)
-    print("received steps to update:")
-    print(new_steps)
     # delete old steps
     for step_num in range(len(recipe.steps)):
         deleted_step = recipe.steps.pop()

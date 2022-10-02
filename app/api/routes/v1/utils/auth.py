@@ -99,7 +99,6 @@ async def get_current_active_user(current_user: Users = Depends(get_current_user
 
 async def check_user_is_in_group(group_name: str, user: Users, session: AsyncSession):
     user_groups = user.groups
-    print(f"user groups: {[i.name for i in user_groups]}")
     if not group_name in [i.name for i in user_groups]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f"Вы не состоите в группе пользователей {group_name}")

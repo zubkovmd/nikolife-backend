@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import Form
+from fastapi import Form, UploadFile
 from pydantic import BaseModel
 
 
@@ -29,6 +29,12 @@ class CreateRecipeRequestModel(BaseModel):
     categories: List[str] = Form()
     steps: List[CreateRecipeStepRequestModel] = Form(...)
     ingredients: List[CreateRecipeIngredientRequestModel] = Form()
+
+
+class CreateCompilationRequestModel(BaseModel):
+    recipe_ids: List[int]
+    title: str
+    image: UploadFile
 
 
 class RecipeLikesRequestModel(BaseModel):

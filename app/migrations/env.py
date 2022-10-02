@@ -10,7 +10,6 @@ from app.config import Settings
 # access to the values within the .ini file in use.
 config = context.config
 db_config = Settings().database
-print(db_config)
 config.set_main_option(
     "sqlalchemy.url",
     f"postgresql://{db_config.username}:{db_config.password}@"

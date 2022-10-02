@@ -17,7 +17,6 @@ class S3Manager:
                                       aws_secret_access_key=Settings().s3.seckey,
                                       endpoint_url=Settings().s3.endpoint,
                                       )
-        print(f"{Settings().s3.acckey=} {Settings().s3.seckey=} {Settings().s3.bucket=}")
         self.bucket = Settings().s3.bucket
 
     def send_file_to_s3(self, filename, object_key):

@@ -377,6 +377,7 @@ class Recipes(Base):
     steps = relationship("RecipeSteps", cascade="all, delete")
     categories = relationship("RecipeCategories", secondary=association_recipes_categories, back_populates="recipes")
     ingredients = relationship("RecipeIngredients", cascade="all, delete")
+    compilations = relationship("RecipeCompilations", secondary=association_recipes_compilations, back_populates="recipes")
     allowed_groups = relationship("Groups", secondary=association_recipes_groups)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("Users", back_populates="created_recipes")

@@ -64,9 +64,8 @@ async def get_recipes_view(
             #     stmt = stmt.join(association_ingredients_groups).join(IngredientsGroups)
             #     stmt = stmt.filter(IngredientsGroups.name.notin_(exclude_groups))
                 # stmt = stmt.filter(sqlalchemy.not_(Ingredients.groups.any(IngredientsGroups.name.in_(a[:2]))))
-
         if compilation:
-            stmt = stmt.join(RecipeCompilations).filter(RecipeCompilations.name==compilation)
+            stmt = stmt.filter(Recipes.compilations.any(RecipeCompilations.name.in_([compilation])))
         response = await session.execute(stmt)
         recipes: List[Recipes] = response.scalars().all()
         if not recipes:
@@ -267,7 +266,6 @@ async def delete_recipe_view(response: Response, recipe_id: int, session: AsyncS
         recipe: Recipes = await get_recipe_by_id(recipe_id=recipe_id, session=session)
         user_created_recipe = recipe.user
         user_groups = user_created_recipe.groups
-        print(f"user created recipe groups: {user_groups}")
         if not user_created_recipe.id == current_user.id and ADMIN_GROUP_NAME not in user_groups:
             response.status_code = status.HTTP_403_FORBIDDEN
             return DefaultResponse(detail="У вас нет прав на удаление этого рецепта")
