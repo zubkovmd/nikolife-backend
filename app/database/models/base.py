@@ -29,6 +29,13 @@ association_recipes_groups = Table(
     Column("group_id", ForeignKey("groups.id")),
 )
 
+association_recipes_compilations = Table(
+    "assoc_recipes_compilations",
+    Base.metadata,
+    Column("recipe_id", ForeignKey("recipes.id")),
+    Column("group_id", ForeignKey("recipe_compilations.id")),
+)
+
 association_recipes_likes = Table(
     "assoc_recipes_likes",
     Base.metadata,
@@ -283,6 +290,14 @@ class RecipeIngredients(Base):
         if at_least_one_attached_attribute:
             return f"<{self.__class__.__name__}({','.join(field_strings)})>"
         return f"<{self.__class__.__name__} {id(self)}>"
+
+
+class RecipeCompilations(Base):
+    __tablename__ = "recipe_compilations"
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    name = Column(String, nullable=False)
+    image = Column(String, nullable=True)
+    recipes = relationship("Recipes", secondary=association_recipes_compilations, back_populates="categories")
 
 
 class RecipeCategories(Base):
