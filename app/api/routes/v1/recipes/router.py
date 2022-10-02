@@ -5,14 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_responses import DefaultResponse, DefaultResponseWithPayload
 from app.api.routes.v1.recipes.utility_classes import GetRecipesResponseModel, RecipeResponseModel, \
-    RecipeCategoriesResponseModel, RecipeLikesRequestModel, GetRecipesRequestModel, FindResponseModel, FindRequestModel
+    RecipeCategoriesResponseModel, RecipeLikesRequestModel, GetRecipesRequestModel, FindResponseModel, FindRequestModel, \
+    RecipeCompilationResponseModel, RecipeCompilationsResponseModel
 from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe_view, delete_recipe_view, \
     create_recipe_view, update_recipe_view, get_liked_recipes_view, get_recipes_by_ingredient_view, \
     get_recipes_by_category_view
 
 from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view, get_available_ingredients_view, \
     get_available_dimensions_view, get_available_ingredients_groups_view, toggle_recipe_like_view, \
-    remove_recipe_from_likes_view, find_all_view
+    remove_recipe_from_likes_view, find_all_view, get_recipes_compilations_view
 from app.api.routes.v1.utils.auth import get_current_active_user, get_current_user
 from app.database.manager import manager
 
@@ -28,9 +29,10 @@ async def get_recipes(
         current_user: Users = Depends(get_current_active_user),
         prefer_ingredients: Union[List[str], None] = Query(default=None),
         exclude_groups: Union[List[str], None] = Query(default=None),
-        include_categories: Union[List[str], None] = Query(default=None)
+        include_categories: Union[List[str], None] = Query(default=None),
+        compilation: Union[str, None] = Query(default=None)
 ):
-    return await get_recipes_view(prefer_ingredients, exclude_groups, include_categories, session, current_user)
+    return await get_recipes_view(prefer_ingredients, exclude_groups, include_categories, session, current_user, compilation)
 
 
 @router.get("/liked", response_model=GetRecipesResponseModel)
@@ -88,6 +90,12 @@ async def update_recipe(
 async def get_recipes_categories(current_user: Users = Depends(get_current_user),
                                  session: AsyncSession = Depends(manager.get_session_object)):
     return await get_recipes_categories_view(session)
+
+
+@router.get("/compilations", response_model=RecipeCompilationsResponseModel)
+async def get_recipes_compilations(current_user: Users = Depends(get_current_user),
+                                 session: AsyncSession = Depends(manager.get_session_object)):
+    return await get_recipes_compilations_view(session)
 
 
 @router.post("/toggle_recipe_like", response_model=DefaultResponse)

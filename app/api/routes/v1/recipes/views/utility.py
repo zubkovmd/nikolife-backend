@@ -18,7 +18,7 @@ from app.api.routes.v1.users.views.utils import get_user_model
 from app.api.routes.v1.utils.auth import get_current_user
 from app.database.manager import manager
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
-    association_recipes_categories
+    association_recipes_categories, RecipeCompilations
 
 
 async def get_recipes_categories_view(session: AsyncSession):
@@ -41,6 +41,25 @@ async def get_recipes_categories_view(session: AsyncSession):
             return response
         else:
             return {"categories": []}
+
+
+async def get_recipes_compilations_view(session: AsyncSession):
+    async with session.begin():
+        stmt = sqlalchemy.select(RecipeCompilations.name, RecipeCompilations.image)
+        response = await session.execute(stmt)
+        compilations: List[RecipeCompilations] = response.scalars().all()
+        if compilations:
+            response = {"compilations": []}
+            for compilation in compilations:
+                response["compilations"].append(
+                    {
+                        "name": compilation.name,
+                        "image": compilation.image
+                    }
+                )
+            return response
+        else:
+            return {"compilations": []}
 
 
 async def get_available_ingredients_view(session: AsyncSession):

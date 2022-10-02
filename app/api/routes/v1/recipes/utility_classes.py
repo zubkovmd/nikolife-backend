@@ -44,6 +44,15 @@ class RecipeCategoriesResponseModel(BaseModel):
     categories: List[RecipecategoryResponseModel]
 
 
+class RecipeCompilationResponseModel(BaseModel):
+    name: str
+    image: str
+
+
+class RecipeCompilationsResponseModel(BaseModel):
+    compilations: List[RecipeCompilationResponseModel]
+
+
 class RecipeFindResponseModel(BaseModel):
     title: str
     recipe_id: int

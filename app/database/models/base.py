@@ -297,7 +297,7 @@ class RecipeCompilations(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
     image = Column(String, nullable=True)
-    recipes = relationship("Recipes", secondary=association_recipes_compilations, back_populates="categories")
+    recipes = relationship("Recipes", secondary=association_recipes_compilations, )
 
 
 class RecipeCategories(Base):

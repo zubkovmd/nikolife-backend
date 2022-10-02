@@ -22,7 +22,7 @@ from app.constants import ADMIN_GROUP_NAME
 from app.database.manager import manager
 from app.database.models.base import Users, Recipes, Ingredients, RecipeDimensions, RecipeIngredients, \
     IngredientsGroups, RecipeSteps, RecipeCategories, Groups, association_recipes_categories, \
-    association_ingredients_groups
+    association_ingredients_groups, RecipeCompilations
 from app.utils.s3_service import manager as s3_manager
 from app.log import default_logger
 
@@ -32,8 +32,9 @@ async def get_recipes_view(
         prefer_ingredients: Optional[List[str]],
         exclude_groups: Optional[List[str]],
         include_categories: Optional[List[str]],
+        compilation: Optional[str],
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_current_active_user),):
     async with session.begin():
         stmt = (
             select(Users)
@@ -63,6 +64,9 @@ async def get_recipes_view(
             #     stmt = stmt.join(association_ingredients_groups).join(IngredientsGroups)
             #     stmt = stmt.filter(IngredientsGroups.name.notin_(exclude_groups))
                 # stmt = stmt.filter(sqlalchemy.not_(Ingredients.groups.any(IngredientsGroups.name.in_(a[:2]))))
+
+        if compilation:
+            stmt = stmt.join(RecipeCompilations).filter(RecipeCompilations.name==compilation)
         response = await session.execute(stmt)
         recipes: List[Recipes] = response.scalars().all()
         if not recipes:
