@@ -29,10 +29,13 @@ async def get_recipes_categories_view(session: AsyncSession):
         if categories:
             response = {"categories": []}
             for category in categories:
+                image = await get_category_image(category=category[0], session=session)
+                if image is None:
+                    continue
                 response["categories"].append(
                     {
                         "name": category[0],
-                        "image": await get_category_image(category=category[0], session=session)
+                        "image": image
                     }
                 )
             return response
