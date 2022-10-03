@@ -12,8 +12,6 @@ class Database(BaseModel):
 
 
 class S3Service(BaseModel):
-    host: str
-    port: int
     acckey: str
     seckey: str
     endpoint: str
