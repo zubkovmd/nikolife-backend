@@ -69,60 +69,12 @@ class Users(Base):
     created_recipes = relationship("Recipes", cascade="all, delete", passive_deletes=True, lazy="select" )
     liked_recipes = relationship("Recipes", secondary=association_recipes_likes, back_populates="liked_by", cascade="all, delete")
 
-    # def __repr__(self) -> str:
-    #     return self._repr(
-    #         id=self.id,
-    #         username=self.username,
-    #         email=self.email,
-    #         groups=self.groups,
-    #     )
-    #
-    # def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-    #     '''
-    #     Helper for __repr__
-    #     '''
-    #     field_strings = []
-    #     at_least_one_attached_attribute = False
-    #     for key, field in fields.items():
-    #         try:
-    #             field_strings.append(f'{key}={field!r}')
-    #         except sqlalchemy.orm.exc.DetachedInstanceError:
-    #             field_strings.append(f'{key}=DetachedInstanceError')
-    #         else:
-    #             at_least_one_attached_attribute = True
-    #     if at_least_one_attached_attribute:
-    #         return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-    #     return f"<{self.__class__.__name__} {id(self)}>"
-
 
 class Groups(Base):
     __tablename__ = "groups"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
     users = relationship("Users", back_populates="groups", secondary=association_users_groups)
-
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            name=self.name
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
 
 class ChatMessages(Base):
@@ -133,62 +85,12 @@ class ChatMessages(Base):
     sender = relationship("Users", foreign_keys=[sender_id], back_populates="messages_send")
     receiver = relationship("Users", foreign_keys=[receiver_id], back_populates="messages_received")
 
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            sender_id=self.sender_id,
-            receiver_id=self.receiver_id,
-            sender=self.sender,
-            receiver=self.receiver
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
-
 
 class IngredientsGroups(Base):
     __tablename__ = "ingredients_groups"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
     ingredients = relationship("Ingredients", back_populates="groups", secondary=association_ingredients_groups)
-
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            name=self.name,
-            ingredients=self.ingredients
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
 
 class Ingredients(Base):
@@ -198,59 +100,11 @@ class Ingredients(Base):
     groups = relationship("IngredientsGroups", back_populates="ingredients", secondary=association_ingredients_groups)
     recipes = relationship("RecipeIngredients", back_populates="ingredient")
 
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            name=self.name,
-            groups=self.groups,
-            recipes=self.recipes
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
-
 
 class RecipeDimensions(Base):
     __tablename__ = "recipe_dimensions"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
-
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            name=self.name
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
 
 class RecipeIngredients(Base):
@@ -262,34 +116,6 @@ class RecipeIngredients(Base):
     dimension_id = Column(Integer, ForeignKey("recipe_dimensions.id"), nullable=False)
     dimension = relationship("RecipeDimensions")
     recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
-
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            ingredient_id=self.ingredient_id,
-            ingredient=self.ingredient,
-            value=self.value,
-            dimension_id=self.dimension,
-            dimension=self.dimension,
-            recipe_id=self.recipe_id
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
 
 class RecipeCompilations(Base):
@@ -306,30 +132,6 @@ class RecipeCategories(Base):
     name = Column(String, nullable=False)
     recipes = relationship("Recipes", secondary=association_recipes_categories, back_populates="categories")
 
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            name=self.name,
-            recipes=self.recipes
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
-
 
 class RecipeSteps(Base):
     __tablename__ = "recipe_steps"
@@ -338,32 +140,6 @@ class RecipeSteps(Base):
     content = Column(String, nullable=False)
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
     recipe = relationship("Recipes", back_populates="steps")
-
-    def __repr__(self) -> str:
-        return self._repr(
-            id=self.id,
-            step_num=self.step_num,
-            content=self.content,
-            recipe_id=self.recipe_id,
-            recipe=self.recipe
-        )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
 
 class StoryItem(Base):
@@ -379,7 +155,6 @@ class Story(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     title = Column(String, nullable=False)
     story_items = relationship("StoryItem", cascade="all, delete")
-
 
 
 class Recipes(Base):
@@ -399,37 +174,4 @@ class Recipes(Base):
     user = relationship("Users", back_populates="created_recipes")
     liked_by = relationship("Users", secondary=association_recipes_likes, back_populates="liked_recipes")
 
-    # def __repr__(self) -> str:
-    #     return self._repr(
-    #         id=self.id,
-    #         title=self.title,
-    #         image=self.image,
-    #         time=self.time,
-    #         complexity=self.complexity,
-    #         servings=self.servings,
-    #         steps=self.steps,
-    #         categories=self.categories,
-    #         ingredients=self.ingredients,
-    #         allowed_groups=self.allowed_groups,
-    #         user_id=self.user_id,
-    #         user=self.user,
-    #         liked_by=self.liked_by
-    #     )
-
-    def _repr(self, **fields: typing.Dict[str, typing.Any]) -> str:
-        '''
-        Helper for __repr__
-        '''
-        field_strings = []
-        at_least_one_attached_attribute = False
-        for key, field in fields.items():
-            try:
-                field_strings.append(f'{key}={field!r}')
-            except sqlalchemy.orm.exc.DetachedInstanceError:
-                field_strings.append(f'{key}=DetachedInstanceError')
-            else:
-                at_least_one_attached_attribute = True
-        if at_least_one_attached_attribute:
-            return f"<{self.__class__.__name__}({','.join(field_strings)})>"
-        return f"<{self.__class__.__name__} {id(self)}>"
 
