@@ -26,7 +26,7 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-SECRET_KEY = "4ab883f63548f6b25532daf1a85fcff1be1fef85a41f0f92cf8260657985c0f7"
+SECRET_KEY = Settings().api.secret_key
 ALGORITHM = "HS256"
 
 

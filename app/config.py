@@ -22,10 +22,15 @@ class Sentry(BaseModel):
     dsn: str
 
 
+class ApiSettings(BaseModel):
+    secret_key: str
+
+
 class Settings(BaseSettings):
     database: Database
     s3: S3Service
     sentry: Sentry
+    api: ApiSettings
     environment: Literal['development', 'testing', 'production']
 
     class Config:
