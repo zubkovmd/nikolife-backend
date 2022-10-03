@@ -366,6 +366,22 @@ class RecipeSteps(Base):
         return f"<{self.__class__.__name__} {id(self)}>"
 
 
+class StoryItem(Base):
+    __tablename__ = "story_item"
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    story_id = Column(Integer, ForeignKey("story.id"))
+    story = relationship("Story", back_populates="story_items")
+    image = Column(String, nullable=False)
+
+
+class Story(Base):
+    __tablename__ = "story"
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    title = Column(String, nullable=False)
+    story_items = relationship("StoryItem", cascade="all, delete")
+
+
+
 class Recipes(Base):
     __tablename__ = "recipes"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
