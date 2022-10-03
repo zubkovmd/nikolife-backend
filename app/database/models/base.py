@@ -136,7 +136,7 @@ class RecipeCategories(Base):
 class RecipeSteps(Base):
     __tablename__ = "recipe_steps"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    step_num = Column(Integer, primary_key=True, nullable=False)
+    step_num = Column(Integer, primary_key=False, nullable=False)
     content = Column(String, nullable=False)
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
     recipe = relationship("Recipes", back_populates="steps")
