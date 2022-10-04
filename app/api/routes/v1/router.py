@@ -8,10 +8,12 @@ from app.api.routes.v1.utils.auth import authenticate_user, Token, create_access
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.api.routes.v1.users.router import router as users_router
 from app.api.routes.v1.recipes.router import router as recipes_router
+from app.api.routes.v1.blog.router import router as blog_router
 
 router = fastapi.APIRouter(prefix="/v1")
 router.include_router(users_router)
 router.include_router(recipes_router)
+router.include_router(blog_router)
 
 
 @router.post("/token", response_model=Token)
