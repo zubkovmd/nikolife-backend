@@ -1,8 +1,11 @@
 import sentry_sdk
 import fastapi
 
+
 from prometheus_fastapi_instrumentator import Instrumentator
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+from app.api.admin import create_admin
 from app.api.routes.root import router
 from app.config import Settings
 
@@ -18,6 +21,9 @@ sentry_sdk.init(
 
 app = fastapi.FastAPI()
 app.include_router(router)
+create_admin(app)
+
+
 
 @app.on_event("startup")
 async def startup():

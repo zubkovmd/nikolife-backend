@@ -69,12 +69,18 @@ class Users(Base):
     created_recipes = relationship("Recipes", cascade="all, delete", passive_deletes=True, lazy="select" )
     liked_recipes = relationship("Recipes", secondary=association_recipes_likes, back_populates="liked_by", cascade="all, delete")
 
+    def __str__(self):
+        return self.username
+
 
 class Groups(Base):
     __tablename__ = "groups"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
     users = relationship("Users", back_populates="groups", secondary=association_users_groups)
+
+    def __str__(self):
+        return self.name
 
 
 class ChatMessages(Base):
@@ -92,6 +98,9 @@ class IngredientsGroups(Base):
     name = Column(String, nullable=False)
     ingredients = relationship("Ingredients", back_populates="groups", secondary=association_ingredients_groups)
 
+    def __str__(self):
+        return self.name
+
 
 class Ingredients(Base):
     __tablename__ = "ingredients"
@@ -100,11 +109,17 @@ class Ingredients(Base):
     groups = relationship("IngredientsGroups", back_populates="ingredients", secondary=association_ingredients_groups)
     recipes = relationship("RecipeIngredients", back_populates="ingredient")
 
+    def __str__(self):
+        return self.name
+
 
 class RecipeDimensions(Base):
     __tablename__ = "recipe_dimensions"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeIngredients(Base):
@@ -125,12 +140,18 @@ class RecipeCompilations(Base):
     image = Column(String, nullable=True)
     recipes = relationship("Recipes", secondary=association_recipes_compilations, )
 
+    def __str__(self):
+        return self.name
+
 
 class RecipeCategories(Base):
     __tablename__ = "recipe_categories"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     name = Column(String, nullable=False)
     recipes = relationship("Recipes", secondary=association_recipes_categories, back_populates="categories")
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeSteps(Base):
@@ -140,6 +161,9 @@ class RecipeSteps(Base):
     content = Column(String, nullable=False)
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
     recipe = relationship("Recipes", back_populates="steps")
+
+    def __str__(self):
+        return self.content
 
 
 class StoryItem(Base):
@@ -156,6 +180,8 @@ class Story(Base):
     title = Column(String, nullable=False)
     story_items = relationship("StoryItem", cascade="all, delete")
 
+    def __str__(self):
+        return self.title
 
 class Recipes(Base):
     __tablename__ = "recipes"
@@ -173,5 +199,8 @@ class Recipes(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("Users", back_populates="created_recipes")
     liked_by = relationship("Users", secondary=association_recipes_likes, back_populates="liked_recipes")
+
+    def __str__(self):
+        return self.title
 
 

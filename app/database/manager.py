@@ -80,6 +80,9 @@ class DatabaseManagerAsync(DatabaseManager):
             pool_size=1000,
         )
 
+    def get_engine(self):
+        return self._engine
+
     @contextlib.asynccontextmanager
     async def get_session(self) -> AsyncSession:
         """

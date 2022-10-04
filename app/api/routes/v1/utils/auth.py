@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from app.config import Settings
 from app.constants import ADMIN_GROUP_NAME
 from app.database.manager import manager
 from app.database.models.base import Users
