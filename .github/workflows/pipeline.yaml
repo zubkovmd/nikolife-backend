@@ -1,0 +1,54 @@
+name: Build and deploy flow
+
+on: [push]
+
+env:
+  ENVIRONMENT_PATH: /tmp/${{github.event.repository.name}}.env
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: login to dockerhub
+        uses: docker/login-action@21f251affc0769ccac8a1cf17e937592fb492337
+        with:
+          username: ${{secrets.DOCKERHUB_USERNAME}}
+          password: ${{secrets.DOCKERHUB_ACCESS_TOKEN}}
+
+      - name: build and push
+        uses: docker/build-push-action@e27bcee4eb9e7b4bc168418e3364c4482120393a
+        with:
+          push: true
+          tags: ${{secrets.DOCKERHUB_USERNAME}}/${{github.event.repository.name}}:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: deploy
+        run: |
+          eval `ssh-agent -s`
+          mkdir -p ~/.ssh && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+          ssh-add - <<< "${{secrets.BACKEND_DEPLOY_USER_SSH_KEY}}"
+          ssh ${{secrets.BACKEND_DEPLOY_USER_USERNAME}}@${{secrets.BACKEND_HOST}} "docker login -u ${{secrets.DOCKERHUB_USERNAME}} -p ${{secrets.DOCKERHUB_ACCESS_TOKEN}} && \
+            docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{github.event.repository.name}}:latest && \
+            (docker stop ${{github.event.repository.name}} && docker rm ${{github.event.repository.name}} || echo "container with name $CI_PROJECT_NAME not found. nothing to delete")
+            docker run -p 8080:8080 \
+            -e DATABASE__HOST=${{secrets.DATABASE__HOST}} \
+            -e DATABASE__PORT=${{secrets.DATABASE__PORT}} \
+            -e DATABASE__USERNAME=${{secrets.DATABASE__USERNAME}} \
+            -e DATABASE__PASSWORD=${{secrets.DATABASE__PASSWORD}} \
+            -e DATABASE__NAME=${{secrets.DATABASE__NAME}} \
+            -e S3__HOST=${{secrets.S3__HOST}} \
+            -e S3__PORT=${{secrets.S3__PORT}} \
+            -e S3__ACCKEY=${{secrets.S3__ACCKEY}} \
+            -e S3__SECKEY=${{secrets.S3__SECKEY}} \
+            -e S3__ENDPOINT=${{secrets.S3__ENDPOINT}} \
+            -e S3__BUCKET=${{secrets.S3__BUCKET}} \
+            -e S3__ENDPOINT=${{secrets.S3__ENDPOINT}} \
+            -e SENTRY__DSN=${{secrets.SENTRY__DSN}} \
+            -e API__SECRET_KEY=${{secrets.API__SECRET_KEY}} \
+            -e ENVIRONMENT=${{secrets.ENVIRONMENT}} \
+            --name ${{github.event.repository.name}} --network ${{secrets.BACKEND_DOCKER_NETWORK}} \
+            -d \
+            ${{secrets.DOCKERHUB_USERNAME}}/${{github.event.repository.name}}:latest"

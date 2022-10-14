@@ -11,3 +11,7 @@ alembic
 prometheus-fastapi-instrumentator
 sentry-sdk[fastapi]
 sqladmin
+uvicorn
+asyncpg
+sqlalchemy_searchable
+psycopg2
