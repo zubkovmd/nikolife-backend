@@ -1,0 +1,65 @@
+import sqlalchemy
+from fastapi import Form, UploadFile, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.v1.blog.utility_classes import GetArticlesResponseModel
+from app.api.routes.v1.users.utils import get_user_by_id
+from app.api.routes.v1.utils.auth import get_current_active_user
+from app.constants import MAX_ARTICLES_COUNT
+from app.database.manager import manager
+from app.database.models.base import Users, Articles
+from app.utils.s3_service import manager as s3_manager
+import locale
+# locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
+
+
+async def get_articles_view(
+        session: AsyncSession,
+) -> GetArticlesResponseModel:
+    async with session.begin():
+        articles = (await session.execute(
+            sqlalchemy.select(Articles)
+                .order_by(Articles.id.desc())
+                .limit(MAX_ARTICLES_COUNT)
+                .options(selectinload(Articles.user))
+        )).scalars().all()
+        return GetArticlesResponseModel(
+            articles=[
+                {
+                    "title": article.title,
+                    "subtitle": article.subtitle,
+                    "created_at": article.created_at.strftime(u'%d %B %Y'),
+                    "text": article.text,
+                    "image": s3_manager.get_url(article.image),
+                    "user_id": article.user.id,
+                }
+                for article
+                in articles
+            ]
+        )
+
+
+
+async def put_article_view(
+        title: str = Form(...),
+        image: UploadFile = Form(...),
+        subtitle: str = Form(...),
+        text: str = Form(...),
+        session: AsyncSession = Depends(manager.get_session_object),
+        current_user: Users = Depends(get_current_active_user),
+):
+    async with session.begin():
+        current_user = await get_user_by_id(user_id=current_user.id, session=session)
+        filename = f"{current_user.username}/blog/{image.filename}"
+        s3_manager.send_memory_file_to_s3(image.file, filename)
+        new_article = Articles(
+            title=title,
+            subtitle=subtitle,
+            text=text,
+            image=filename,
+            user=current_user
+        )
+        session.add(new_article)
+        return DefaultResponse(status_code=200, detail="Статья создана")

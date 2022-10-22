@@ -18,3 +18,16 @@ class GetStoriesResponseModel(BaseModel):
 class PutStoriesResponseModel(BaseModel):
     images: List[UploadFile] = Form(default=None)
     title: str = Form(default=None)
+
+
+class GetArticlesResponseModel(BaseModel):
+
+    class GetArticleResponseModel(BaseModel):
+        title: str
+        subtitle: str
+        created_at: str
+        text: str
+        image: str
+        user_id: int
+
+    articles: List[GetArticleResponseModel]

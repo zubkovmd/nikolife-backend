@@ -12,7 +12,7 @@ from app.api.routes.v1.utils.auth import authenticate_user, create_access_token
 from app.config import Settings
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_GROUP_NAME
 from app.database.models.base import Users, Groups, IngredientsGroups, Recipes, Ingredients, RecipeDimensions, \
-    RecipeIngredients, RecipeCategories, RecipeCompilations, Story
+    RecipeIngredients, RecipeCategories, RecipeCompilations, Story, Articles
 from app.database.manager import manager
 
 
@@ -96,6 +96,11 @@ def create_admin(app: fastapi.FastAPI):
         name_plural = "Истории"
         column_list = [Story.id, Story.title]
 
+    class ArticlePanel(ModelView, model=Articles):
+        name = "Новость"
+        name_plural = "Новости"
+        column_list = [Articles.id, Articles.title]
+
 
 
     admin.add_view(UsersPanel)
@@ -108,3 +113,4 @@ def create_admin(app: fastapi.FastAPI):
     admin.add_view(RecipeCategoriesPanel)
     admin.add_view(RecipeCompilationsPanel)
     admin.add_view(StoryPanel)
+    admin.add_view(ArticlePanel)
