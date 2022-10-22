@@ -26,7 +26,7 @@ class S3Manager:
         self.s3_client.put_object(Body=file, Bucket=self.bucket, Key=object_key)
 
     def get_url(self, filename):
-        return self.s3_client.generate_presigned_url('get_object', Params={'Bucket': self.bucket, 'Key': filename})
+        return self.s3_client.generate_presigned_url('get_object', Params={'Bucket': self.bucket, 'Key': filename},ExpiresIn=700000)
 
 
 manager = S3Manager()
