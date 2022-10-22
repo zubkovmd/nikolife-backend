@@ -33,7 +33,7 @@ jobs:
           ssh ${{secrets.BACKEND_DEPLOY_USER_USERNAME}}@${{secrets.BACKEND_HOST}} "docker login -u ${{secrets.DOCKERHUB_USERNAME}} -p ${{secrets.DOCKERHUB_ACCESS_TOKEN}} && \
             docker pull ${{secrets.DOCKERHUB_USERNAME}}/${{github.event.repository.name}}:latest && \
             (docker stop ${{github.event.repository.name}} && docker rm ${{github.event.repository.name}} || echo "container with name $CI_PROJECT_NAME not found. nothing to delete")
-            docker run -p 80:80 \
+            docker run -p 5443:80 \
             -e DATABASE__HOST=${{secrets.DATABASE__HOST}} \
             -e DATABASE__PORT=${{secrets.DATABASE__PORT}} \
             -e DATABASE__USERNAME=${{secrets.DATABASE__USERNAME}} \

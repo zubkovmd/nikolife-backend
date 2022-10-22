@@ -28,6 +28,10 @@ class User(BaseModel):
 class UserRequestResponse(DefaultResponse):
     user: User
 
+class UserGoogleAuthResponse(DefaultResponse):
+    user: User
+    jwt: str
+
 
 # RECIPE RESPONSES
 class RecipeCreatedResponse(DefaultResponse):

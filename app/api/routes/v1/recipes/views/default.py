@@ -48,7 +48,7 @@ async def get_recipes_view(
         default_logger.info(f"got /get_recipes from {repr(current_user)}")
         stmt = (
             select(Recipes)
-            .where(Recipes.user_id == 1, Recipes.image.isnot(None))  # TODO: УБРАТЬ ФИЛЬТР БЕЗ КАРТИНОК, ВЫНЕСТИ В ФУНКЦИЮ
+            .where(Recipes.image.isnot(None))  # TODO: УБРАТЬ ФИЛЬТР БЕЗ КАРТИНОК, ВЫНЕСТИ В ФУНКЦИЮ
             .filter(Recipes.allowed_groups.any(Groups.id.in_([i.id for i in current_user.groups])))
             .options(selectinload(
                 '*'
