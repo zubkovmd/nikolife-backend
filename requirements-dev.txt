@@ -1,0 +1,2 @@
+black
+docstr-coverage

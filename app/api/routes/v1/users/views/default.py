@@ -62,7 +62,6 @@ async def get_or_create_google_user_view(
                 info="",
                 password=uuid.uuid4().hex,
                 name=valideted_google_user.name,
-                jwt="",
             )
             if valideted_google_user.picture:
                 filename = f"{valideted_google_user.email}/avatar.png"

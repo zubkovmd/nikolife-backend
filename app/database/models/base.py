@@ -62,7 +62,6 @@ class Users(Base):
     name = Column(String, nullable=False)
     info = Column(String, nullable=False)           # Доп инфа о пользователе (скорее всего будет должность)
     image = Column(String, nullable=True)
-    jwt = Column(String, nullable=True)
     groups = relationship("Groups", back_populates="users", secondary=association_users_groups)
     messages_send = relationship("ChatMessages", foreign_keys="ChatMessages.sender_id", back_populates="sender", cascade="all, delete")
     messages_received = relationship("ChatMessages", foreign_keys="ChatMessages.receiver_id", back_populates="receiver", cascade="all, delete")
