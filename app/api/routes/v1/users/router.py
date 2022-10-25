@@ -11,7 +11,7 @@ from app.api.routes.v1.users.views.default import get_user_by_id_view, register_
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 
 router = APIRouter(prefix="/users")
 router.include_router(groups_router)
@@ -22,7 +22,7 @@ async def read_users_me(current_user: Users = Depends(get_user_by_token)):
     dicted = current_user.__dict__
     print(f"/me image: {current_user.image}")
     if current_user.image:
-        dicted["image"] = s3_manager.get_url(current_user.image)
+        dicted["image"] = S3Manager.get_instance().get_url(current_user.image)
     return UserRequestResponse(detail="Пользователь найден", user=User(**dicted))
 
 

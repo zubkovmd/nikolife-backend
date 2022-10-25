@@ -19,7 +19,7 @@ from app.api.routes.v1.utils.auth import get_user_by_token
 from app.database import DatabaseManagerAsync
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
     association_recipes_categories, RecipeCompilations
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 
 
 async def get_recipes_categories_view(session: AsyncSession):
@@ -55,7 +55,7 @@ async def get_recipes_compilations_view(session: AsyncSession):
                 response["compilations"].append(
                     {
                         "name": compilation.name,
-                        "image": s3_manager.get_url(compilation.image)
+                        "image": S3Manager.get_instance().get_url(compilation.image)
                     }
                 )
             return response
@@ -71,7 +71,7 @@ async def create_recipes_compilation_view(
         stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
         recipes = (await session.execute(stmt)).scalars().all()
         filename = f"{current_user.username}/compilations/{request.image.filename}"
-        s3_manager.send_memory_file_to_s3(request.image.file, filename)
+        S3Manager.get_instance().send_memory_file_to_s3(request.image.file, filename)
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
     return DefaultResponse(detail="Подборка добавлена")
 

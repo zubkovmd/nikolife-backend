@@ -10,7 +10,7 @@ from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import check_is_user_admin
 from app.constants import MAX_STORIES_COUNT
 from app.database.models.base import Story, StoryItem
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 
 
 async def get_stories_view(session: AsyncSession):
@@ -20,8 +20,8 @@ async def get_stories_view(session: AsyncSession):
             "stories": [
                 {
                     "title": story.title,
-                    "thumbnail": s3_manager.get_url(story.thumbnail),
-                    "images": [s3_manager.get_url(story_item.image) for story_item in story.story_items]
+                    "thumbnail": S3Manager.get_instance().get_url(story.thumbnail),
+                    "images": [S3Manager.get_instance().get_url(story_item.image) for story_item in story.story_items]
                 }
                 for story
                 in stories]
@@ -34,11 +34,11 @@ async def put_story_view(current_user, session: AsyncSession, images: List[Uploa
         await check_is_user_admin(user=current_user, session=session)
         new_story = Story(title=title)
         thumbnail_filename = f"{current_user.username}/stories/{title}/{thumbnail.filename}"
-        s3_manager.send_memory_file_to_s3(thumbnail.file, thumbnail_filename)
+        S3Manager.get_instance().send_memory_file_to_s3(thumbnail.file, thumbnail_filename)
         new_story.thumbnail = thumbnail_filename
         for image in images:
             filename = f"{current_user.username}/stories/{title}/{image.filename}"
-            s3_manager.send_memory_file_to_s3(image.file, filename)
+            S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
             new_story.story_items.append(StoryItem(image=filename))
         session.add(new_story)
         return DefaultResponse(detail="Story добавлена")

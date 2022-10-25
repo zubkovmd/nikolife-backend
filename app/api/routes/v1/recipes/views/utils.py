@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload, lazyload
 from starlette import status
 
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel, CreateRecipeStepRequestModel
 from app.database.models.base import Ingredients, IngredientsGroups, RecipeDimensions, RecipeIngredients, Recipes, \
     RecipeCategories, RecipeSteps
@@ -189,5 +189,5 @@ async def get_category_image(category: str, session: AsyncSession) -> Optional[s
         raise HTTPException(status_code=404, detail="Категория не найдена")
     for recipe in category.recipes:
         if recipe.image:
-            return s3_manager.get_url(recipe.image)
+            return S3Manager.get_instance().get_url(recipe.image)
     return None

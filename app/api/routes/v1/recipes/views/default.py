@@ -23,7 +23,7 @@ from app.database import DatabaseManagerAsync
 from app.database.models.base import Users, Recipes, Ingredients, RecipeDimensions, RecipeIngredients, \
     IngredientsGroups, RecipeSteps, RecipeCategories, Groups, association_recipes_categories, \
     association_ingredients_groups, RecipeCompilations
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 from app.log import default_logger
 
 
@@ -78,7 +78,7 @@ async def get_recipes_view(
                     continue
             recipe_dicted = recipe.__dict__
             if recipe.image:
-                image = s3_manager.get_url(recipe.image)
+                image = S3Manager.get_instance().get_url(recipe.image)
             else:
                 image = None
             recipe_dicted["image"] = image
@@ -119,7 +119,7 @@ async def get_recipes_by_ingredient_view(
     for recipe in recipes:
         recipe_dicted = recipe.__dict__
         if recipe.image:
-            image = s3_manager.get_url(recipe.image)
+            image = S3Manager.get_instance().get_url(recipe.image)
         else:
             image = None
         recipe_dicted["image"] = image
@@ -162,7 +162,7 @@ async def get_recipes_by_category_view(
     for recipe in recipes:
         recipe_dicted = recipe.__dict__
         if recipe.image:
-            image = s3_manager.get_url(recipe.image)
+            image = S3Manager.get_instance().get_url(recipe.image)
         else:
             image = None
         recipe_dicted["image"] = image
@@ -204,7 +204,7 @@ async def get_liked_recipes_view(
                 continue
             recipe_dicted = recipe.__dict__
             if recipe.image:
-                image = s3_manager.get_url(recipe.image)
+                image = S3Manager.get_instance().get_url(recipe.image)
             else:
                 image = None
             recipe_dicted["image"] = image
@@ -255,7 +255,7 @@ async def get_recipe_view(
             recipe_response["ingredients"]]
         recipe_response["steps"] = [i.content for i in list(sorted(recipe_response["steps"], key=lambda x: x.step_num))]
         recipe_response["categories"] = [i.name for i in recipe_response["categories"]]
-        recipe_response["image"] = None if recipe_response["image"] is None else s3_manager.get_url(
+        recipe_response["image"] = None if recipe_response["image"] is None else S3Manager.get_instance().get_url(
             recipe_response["image"])
         recipe_response["liked"] = current_user in recipe.liked_by
         return recipe_response
@@ -302,7 +302,7 @@ async def create_recipe_view(
         for category in categories:
             new_recipe.categories.append(await get_category_or_create_if_not_exists(category, session))
         filename = f"/{current_user.username}/recipes/{new_recipe.title}_{int(datetime.now().timestamp())}.jpg"
-        s3_manager.send_memory_file_to_s3(image.file, filename)
+        S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
         new_recipe.image = filename
         session.add(new_recipe)
         await session.flush()
@@ -329,7 +329,7 @@ async def update_recipe_view(
             recipe.title = title
         if image:
             filename = f"/{current_user.username}/recipes/{recipe.title}_{int(datetime.now().timestamp())}.jpg"
-            s3_manager.send_memory_file_to_s3(image.file, filename)
+            S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
             recipe.image = filename
         if time:
             recipe.time = time

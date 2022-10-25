@@ -20,7 +20,7 @@ from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash, c
 from app.constants import DEFAULT_USER_GROUP_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
-from app.utils.s3_service import manager as s3_manager
+from app.utils import S3Manager
 
 
 async def get_user_by_id_view(
@@ -31,7 +31,7 @@ async def get_user_by_id_view(
         print(f"/by_id image: {user.image}")
         dicted = user.__dict__
         if user.image:
-            dicted["image"] = s3_manager.get_url(user.image)
+            dicted["image"] = S3Manager.get_instance().get_url(user.image)
         return UserRequestResponse(detail="Пользователь найден", user=User(**dicted))
 
 
@@ -65,7 +65,7 @@ async def get_or_create_google_user_view(
             )
             if valideted_google_user.picture:
                 filename = f"{valideted_google_user.email}/avatar.png"
-                s3_manager.send_memory_file_to_s3(file=BytesIO(requests.get(valideted_google_user.picture).content),
+                S3Manager.get_instance().send_memory_file_to_s3(file=BytesIO(requests.get(valideted_google_user.picture).content),
                                                   object_key=filename)
                 user.image = filename
             user.groups.append(await get_group_model_or_create_if_not_exists(group_name=DEFAULT_USER_GROUP_NAME,
@@ -78,7 +78,7 @@ async def get_or_create_google_user_view(
         dicted = user.__dict__.copy()
         print(f"/google image: {dicted['image']}")
         if user.image:
-            dicted["image"] = s3_manager.get_url(user.image)
+            dicted["image"] = S3Manager.get_instance().get_url(user.image)
         return UserGoogleAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=token)
 
 
@@ -133,6 +133,6 @@ async def update_user_view(username=Form(default=None),
             user.info = info
         if image:
             object_key = f"{user.username}/profile_photo.jpg"
-            s3_manager.send_memory_file_to_s3(image.file, object_key=object_key)
+            S3Manager.get_instance().send_memory_file_to_s3(image.file, object_key=object_key)
             user.image = object_key
         return DefaultResponse(detail="Информация о пользователе обновлена")
