@@ -1,3 +1,8 @@
+"""
+Script that creates revision with last models changes.
+Usage from root folder: ``python app/alembic_revision``.
+"""
+
 from datetime import datetime
 
 from alembic import command

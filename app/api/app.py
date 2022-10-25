@@ -1,3 +1,7 @@
+"""
+In this module FastAPI application is initializing.
+"""
+
 import sentry_sdk
 import fastapi
 
@@ -24,7 +28,7 @@ app.include_router(router)
 create_admin(app)
 
 
-
 @app.on_event("startup")
 async def startup():
+    """startup methods for FastAPI application"""
     Instrumentator().instrument(app).expose(app)
