@@ -13,12 +13,12 @@ from app.config import Settings
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_GROUP_NAME
 from app.database.models.base import Users, Groups, IngredientsGroups, Recipes, Ingredients, RecipeDimensions, \
     RecipeIngredients, RecipeCategories, RecipeCompilations, Story, Articles
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 
 
 class MyBackend(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
-        async with manager.get_session() as session:
+        async with DatabaseManagerAsync.get_instance().get_session() as session:
             form = await request.form()
             user = await authenticate_user(form["username"], form["password"])
             user = await get_user_by_id(user_id=user.id, session=session)
@@ -43,7 +43,11 @@ class MyBackend(AuthenticationBackend):
 
 
 def create_admin(app: fastapi.FastAPI):
-    admin = Admin(app, manager.get_engine(), authentication_backend=MyBackend(secret_key=Settings().api.secret_key))
+    admin = Admin(
+            app,
+            DatabaseManagerAsync.get_instance().get_engine(),
+            authentication_backend=MyBackend(secret_key=Settings().api.secret_key)
+    )
 
     class UsersPanel(ModelView, model=Users):
         name = "Пользователь"

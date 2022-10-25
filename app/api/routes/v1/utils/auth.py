@@ -16,7 +16,7 @@ from starlette import status
 from app.api.routes.v1.utils.exceptions import CredentialsException
 from app.config import Settings
 from app.constants import ADMIN_GROUP_NAME
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from passlib.context import CryptContext
 
@@ -65,7 +65,7 @@ async def get_user(username: str) -> Users:
     :param username: username for search
     :return: User instance
     """
-    async with manager.get_session() as session:
+    async with DatabaseManagerAsync.get_instance().get_session() as session:
         stmt = (sqlalchemy.select(Users).where(Users.username == username).limit(1).options(selectinload(Users.groups)))
         response = await session.execute(stmt)
         user: Optional[Users] = response.scalars().first()

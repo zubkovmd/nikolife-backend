@@ -16,7 +16,7 @@ from app.api.routes.v1.recipes.views.utils import get_recipe_by_id, get_category
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.users.views.utils import get_user_model
 from app.api.routes.v1.utils.auth import get_user_by_token
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
     association_recipes_categories, RecipeCompilations
 from app.utils.s3_service import manager as s3_manager
@@ -63,9 +63,13 @@ async def get_recipes_compilations_view(session: AsyncSession):
             return {"compilations": []}
 
 
-async def create_recipes_compilation_view(current_user: Users, request: CreateCompilationRequestModel,session: AsyncSession):
+async def create_recipes_compilation_view(
+        current_user: Users,
+        request: CreateCompilationRequestModel,
+        session: AsyncSession):
     async with session.begin():
-        recipes = (await session.execute(sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids)))).scalars().all()
+        stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
+        recipes = (await session.execute(stmt)).scalars().all()
         filename = f"{current_user.username}/compilations/{request.image.filename}"
         s3_manager.send_memory_file_to_s3(request.image.file, filename)
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
@@ -108,9 +112,10 @@ async def get_available_ingredients_groups_view(session: AsyncSession):
         return {"groups": groups}
 
 
-async def toggle_recipe_like_view(recipe: RecipeLikesRequestModel,
-                                  current_user: Users = Depends(get_user_by_token),
-                                  session: AsyncSession = Depends(manager.get_session_object)):
+async def toggle_recipe_like_view(
+        recipe: RecipeLikesRequestModel,
+        current_user: Users = Depends(get_user_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     async with session.begin():
         current_user_stmt = select(Users).filter(Users.id == current_user.id).options(selectinload(Users.liked_recipes))
         resp = await session.execute(current_user_stmt)
@@ -124,9 +129,10 @@ async def toggle_recipe_like_view(recipe: RecipeLikesRequestModel,
             return DefaultResponse(detail="Рецепт удален из избранного")
 
 
-async def remove_recipe_from_likes_view(recipe: RecipeLikesRequestModel,
-                                        current_user: Users = Depends(get_user_by_token),
-                                        session: AsyncSession = Depends(manager.get_session_object)):
+async def remove_recipe_from_likes_view(
+        recipe: RecipeLikesRequestModel,
+        current_user: Users = Depends(get_user_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     async with session.begin():
         current_user = await get_user_model(username=current_user.username, session=session)
         recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)
@@ -148,22 +154,34 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
         resp = await session.execute(search_by_semi_compare)
         resp = resp.scalars().all()
         if resp:
-                return resp
+            return resp
         else:
             return []
 
-async def find_all_view(string_to_find: str, max_returns: int = 5, session: AsyncSession = Depends(manager.get_session_object)):
+
+async def find_all_view(
+        string_to_find: str,
+        max_returns: int = 5,
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     async with session.begin():
         response_model = FindResponseModel(recipes=[], ingredients=[], categories=[])
 
         # FIND IN RECIPES
-        search_recipes: List[Recipes] = await search_by_field(string_to_find=string_to_find, max_returns=max_returns, model=Recipes, field=Recipes.title, session=session)
+        search_recipes: List[Recipes] = await search_by_field(string_to_find=string_to_find, max_returns=max_returns,
+                                                              model=Recipes, field=Recipes.title, session=session)
         response_model.recipes = [RecipeFindResponseModel(title=i.title, recipe_id=i.id) for i in search_recipes]
         # FIND IN CATEGORIES
-        searh_categories: List[RecipeCategories] = await search_by_field(string_to_find=string_to_find, max_returns=max_returns, model=RecipeCategories, field=RecipeCategories.name, session=session)
-        response_model.categories = [CategoryFindResponseModel(name=category.name, category_id=category.id) for category in searh_categories]
+        searh_categories: List[RecipeCategories] = await search_by_field(string_to_find=string_to_find,
+                                                                         max_returns=max_returns,
+                                                                         model=RecipeCategories,
+                                                                         field=RecipeCategories.name, session=session)
+        response_model.categories = [CategoryFindResponseModel(name=category.name, category_id=category.id) for category
+                                     in searh_categories]
         # FIND IN INGREDIENTS
-        searh_ingredients: List[Ingredients] = await search_by_field(string_to_find=string_to_find, max_returns=max_returns, model=Ingredients, field=Ingredients.name, session=session)
-        response_model.ingredients = [IngredientFindResponseModel(name=ingredient.name, ingredient_id=ingredient.id) for ingredient in searh_ingredients]
+        searh_ingredients: List[Ingredients] = await search_by_field(string_to_find=string_to_find,
+                                                                     max_returns=max_returns, model=Ingredients,
+                                                                     field=Ingredients.name, session=session)
+        response_model.ingredients = [IngredientFindResponseModel(name=ingredient.name, ingredient_id=ingredient.id) for
+                                      ingredient in searh_ingredients]
 
         return response_model

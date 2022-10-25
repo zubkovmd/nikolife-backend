@@ -18,14 +18,14 @@ from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.users.views.utils import get_user_model
 from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash, create_access_token
 from app.constants import DEFAULT_USER_GROUP_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from app.utils.s3_service import manager as s3_manager
 
 
 async def get_user_by_id_view(
         user_id: int,
-        session: AsyncSession = Depends(manager.get_session_object)):
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     async with session.begin():
         user: Users = await get_user_by_id(user_id=user_id, session=session)
         print(f"/by_id image: {user.image}")
@@ -37,14 +37,14 @@ async def get_user_by_id_view(
 
 async def get_or_create_google_user_view(
         token: str,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ) -> UserGoogleAuthResponse:
     class GoogleResponseModel(BaseModel):
         id: str
         email: str
         name: str
         picture: Optional[str]
-    print(token)
+
     headers = {"Authorization": f"Bearer {token}"}
     url = "https://www.googleapis.com/oauth2/v1/userinfo"
     response = requests.get(url, headers=headers)
@@ -65,7 +65,8 @@ async def get_or_create_google_user_view(
             )
             if valideted_google_user.picture:
                 filename = f"{valideted_google_user.email}/avatar.png"
-                s3_manager.send_memory_file_to_s3(file=BytesIO(requests.get(valideted_google_user.picture).content), object_key=filename)
+                s3_manager.send_memory_file_to_s3(file=BytesIO(requests.get(valideted_google_user.picture).content),
+                                                  object_key=filename)
                 user.image = filename
             user.groups.append(await get_group_model_or_create_if_not_exists(group_name=DEFAULT_USER_GROUP_NAME,
                                                                              session=session))
@@ -81,9 +82,8 @@ async def get_or_create_google_user_view(
         return UserGoogleAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=token)
 
 
-
-
-async def register_user_view(user: RegisterRequestModel, session: AsyncSession = Depends(manager.get_session_object)):
+async def register_user_view(user: RegisterRequestModel,
+                             session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     async with session.begin():
         stmt = sqlalchemy.select(Users).where(Users.username == user.username)
         resp = await session.execute(stmt)
@@ -101,7 +101,7 @@ async def register_user_view(user: RegisterRequestModel, session: AsyncSession =
         return DefaultResponse(detail="Регистрация успешна")
 
 
-async def delete_user_view(session: AsyncSession = Depends(manager.get_session_object),
+async def delete_user_view(session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
                            current_user: Users = Depends(get_user_by_token)):
     user_to_delete = UserFromDB(**current_user.__dict__)
     async with session.begin():
@@ -117,7 +117,7 @@ async def update_user_view(username=Form(default=None),
                            name=Form(default=None),
                            info=Form(default=None),
                            image: UploadFile = File(default=None),
-                           session: AsyncSession = Depends(manager.get_session_object),
+                           session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
                            current_user: Users = Depends(get_user_by_token),
                            ):
     user_to_update = UserFromDB(**current_user.__dict__)

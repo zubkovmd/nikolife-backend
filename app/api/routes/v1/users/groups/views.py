@@ -10,35 +10,35 @@ from app.api.routes.v1.users.utility_classes import GroupRequestModel, GroupChan
     AddUserToGroupRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import check_is_user_admin, get_user_by_token, check_user_is_in_group
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import Users, Groups
 
 
 async def add_group_view(
         group_model: GroupRequestModel,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
-        await check_is_user_admin(user=current_user, session=session)
+        await check_is_user_admin(user=current_user)
         await add_group_if_not_exists(group_name=group_model.group_name, session=session)
         return DefaultResponse(detail="Группа создана")
 
 
 async def remove_group_view(
         group_model: GroupRequestModel,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
-        await check_is_user_admin(user=current_user, session=session)
+        await check_is_user_admin(user=current_user)
         await remove_group_if_exists(group_name=group_model.group_name, session=session)
         return DefaultResponse(detail="Группа удалена")
 
 
 async def change_group_name_view(
         group_model: GroupChangeRequestModel,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
@@ -52,7 +52,7 @@ async def change_group_name_view(
 
 async def add_user_to_group_view(
         group_model: AddUserToGroupRequestModel,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
@@ -73,7 +73,7 @@ async def add_user_to_group_view(
 
 async def remove_user_from_group_view(
         group_model: AddUserToGroupRequestModel,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
@@ -86,4 +86,6 @@ async def remove_user_from_group_view(
             user.groups.remove(needed_group)
             return DefaultResponse(detail=f"Пользователь удален из группы {group_model.group_name}")
         except HTTPException as e:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Пользователь не состоит в группе {group_model.group_name}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Пользователь не состоит в группе {group_model.group_name}")

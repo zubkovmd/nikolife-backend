@@ -9,7 +9,7 @@ from app.api.routes.v1.users.utility_classes import RegisterRequestModel
 from app.api.routes.v1.users.views.default import get_user_by_id_view, register_user_view, delete_user_view, \
     update_user_view, get_or_create_google_user_view
 from app.api.routes.v1.utils.auth import get_user_by_token
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from app.utils.s3_service import manager as s3_manager
 
@@ -29,27 +29,30 @@ async def read_users_me(current_user: Users = Depends(get_user_by_token)):
 @router.get("/by_id/{user_id}", response_model=Union[UserRequestResponse, DefaultResponse])
 async def get_user_by_id(
         user_id: int,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token)
 ) -> Users:
     return await get_user_by_id_view(user_id=user_id, session=session)
 
 
 @router.post("/", response_model=DefaultResponse)
-async def register_user(user: RegisterRequestModel, session: AsyncSession = Depends(manager.get_session_object)):
+async def register_user(
+        user: RegisterRequestModel,
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
     return await register_user_view(user=user, session=session)
+
 
 @router.get("/googleUser", response_model=UserGoogleAuthResponse)
 async def get_or_create_google_user(
         token: str,
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
 
     return await get_or_create_google_user_view(token=token, session=session)
 
 
 @router.delete("/", response_model=DefaultResponse)
-async def delete_user(session: AsyncSession = Depends(manager.get_session_object),
+async def delete_user(session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
                       current_user: Users = Depends(get_user_by_token)):
     return await delete_user_view(session=session, current_user=current_user)
 
@@ -60,7 +63,7 @@ async def update_user(username=Form(default=None),
                       name=Form(default=None),
                       info=Form(default=None),
                       image: UploadFile = File(default=None),
-                      session: AsyncSession = Depends(manager.get_session_object),
+                      session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
                       current_user: Users = Depends(get_user_by_token),
                       ):
     return await update_user_view(

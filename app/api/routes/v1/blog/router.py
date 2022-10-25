@@ -13,7 +13,7 @@ from app.api.routes.v1.recipes.views.default import get_recipes_view
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token, check_is_user_admin
 from app.constants import MAX_ARTICLES_COUNT
-from app.database.manager import manager
+from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 
 router = APIRouter(prefix="/blog")
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/blog")
 
 @router.get("/stories", response_model=GetStoriesResponseModel)
 async def get_stories(
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token),
 ):
     return await get_stories_view(session)
@@ -33,7 +33,7 @@ async def put_story(
         title: str = Form(...),
         thumbnail: UploadFile = Form(...),
         images: List[UploadFile] = Form(...),
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token),
 ):
     return await put_story_view(current_user=current_user, session=session, title=title, thumbnail=thumbnail, images=images)
@@ -41,7 +41,7 @@ async def put_story(
 
 @router.get("/articles", response_model=GetArticlesResponseModel)
 async def get_articles(
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         articles_count: int = MAX_ARTICLES_COUNT,
 ) -> GetArticlesResponseModel:
     """
@@ -60,7 +60,7 @@ async def put_article(
         image: UploadFile = Form(...),
         subtitle: str = Form(...),
         text: str = Form(...),
-        session: AsyncSession = Depends(manager.get_session_object),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: Users = Depends(get_user_by_token),
 ) -> DefaultResponse:
     """

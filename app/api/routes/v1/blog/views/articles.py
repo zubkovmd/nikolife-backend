@@ -7,7 +7,6 @@ from app.api.routes.default_responses import DefaultResponse
 from app.api.routes.v1.blog.utility_classes import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.constants import MAX_ARTICLES_COUNT
-from app.database.manager import manager
 from app.database.models.base import Users, Articles
 from app.utils.s3_service import manager as s3_manager
 import locale
