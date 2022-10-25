@@ -3,7 +3,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.users.groups.utils import add_group_if_not_exists, remove_group_if_exists, \
     change_group_name_if_exists, get_group_model_or_create_if_not_exists
 from app.api.routes.v1.users.utility_classes import GroupRequestModel, GroupChangeRequestModel, \

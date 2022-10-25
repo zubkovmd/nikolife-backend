@@ -3,7 +3,7 @@ from typing import List
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.utility_classes import GetStoriesResponseModel
 from app.api.routes.v1.blog.utils.select import get_last_stories
 from app.api.routes.v1.users.utils import get_user_by_id

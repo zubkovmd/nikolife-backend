@@ -1,3 +1,5 @@
+"""Root application router"""
+
 import fastapi
 from app.api.routes.v1.router import router as router_v1
 

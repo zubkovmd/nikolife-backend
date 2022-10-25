@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
-from app.api.routes.default_responses import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
+from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
 from app.api.routes.v1.users.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.users.utility_classes import RegisterRequestModel, UserFromDB
 from app.api.routes.v1.users.utils import get_user_by_id

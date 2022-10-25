@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 from sqlalchemy_searchable import search
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.recipes.utility_classes import RecipeLikesRequestModel, FindRequestModel, FindResponseModel, \
     RecipeFindResponseModel, IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel
 from app.api.routes.v1.recipes.views.utils import get_recipe_by_id, get_category_image

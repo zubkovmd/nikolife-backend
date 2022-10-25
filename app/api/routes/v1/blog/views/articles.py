@@ -3,7 +3,7 @@ from fastapi import Form, UploadFile, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.utility_classes import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.constants import MAX_ARTICLES_COUNT

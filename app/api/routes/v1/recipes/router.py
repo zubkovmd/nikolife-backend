@@ -3,7 +3,7 @@ from typing import List, Dict, Optional, Union
 from fastapi import Depends, Response, UploadFile, Form, File, APIRouter, Body, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_responses import DefaultResponse, DefaultResponseWithPayload
+from app.api.routes.default_response_models import DefaultResponse, DefaultResponseWithPayload
 from app.api.routes.v1.recipes.utility_classes import GetRecipesResponseModel, RecipeResponseModel, \
     RecipeCategoriesResponseModel, RecipeLikesRequestModel, GetRecipesRequestModel, FindResponseModel, FindRequestModel, \
     RecipeCompilationResponseModel, RecipeCompilationsResponseModel, CreateCompilationRequestModel

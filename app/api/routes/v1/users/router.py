@@ -3,7 +3,7 @@ from typing import Union
 from fastapi import Depends, UploadFile, Form, File, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_responses import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
+from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
 from app.api.routes.v1.users.groups.router import router as groups_router
 from app.api.routes.v1.users.utility_classes import RegisterRequestModel
 from app.api.routes.v1.users.views.default import get_user_by_id_view, register_user_view, delete_user_view, \

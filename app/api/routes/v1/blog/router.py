@@ -3,7 +3,7 @@ from typing import List, Union
 from fastapi import Depends, APIRouter, Query, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.utility_classes import GetStoriesResponseModel, PutStoriesResponseModel, \
     GetArticlesResponseModel
 from app.api.routes.v1.blog.views.articles import put_article_view, get_articles_view

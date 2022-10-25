@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.api.routes.default_responses import DefaultResponse
+from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.users.groups.views import add_group_view, remove_group_view, change_group_name_view, \
     add_user_to_group_view, remove_user_from_group_view
 from app.api.routes.v1.users.utility_classes import GroupRequestModel, GroupChangeRequestModel, \

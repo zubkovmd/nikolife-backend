@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, lazyload, selectinload
 from starlette import status
 
-from app.api.routes.default_responses import DefaultResponse, DefaultResponseWithPayload
+from app.api.routes.default_response_models import DefaultResponse, DefaultResponseWithPayload
 from app.api.routes.v1.recipes.utility_classes import GetRecipesRecipeResponseModel, RecipeIngredientResponseModel, \
     CreateRecipeIngredientRequestModel, CreateRecipeStepRequestModel, GetRecipesRequestModel
 from app.api.routes.v1.recipes.views.utils import parse_ingredients_to_pydantic_models, parse_steps_to_pydantic_models, \
