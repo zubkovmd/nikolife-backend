@@ -1,27 +1,24 @@
 from typing import Union
 
-import sqlalchemy
-from fastapi import Depends, Response, status, UploadFile, Form, File, APIRouter
+from fastapi import Depends, UploadFile, Form, File, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.api.routes.default_responses import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
-from app.api.routes.v1.users.utility_classes import RegisterRequestModel, UserFromDB
+from app.api.routes.v1.users.groups.router import router as groups_router
+from app.api.routes.v1.users.utility_classes import RegisterRequestModel
 from app.api.routes.v1.users.views.default import get_user_by_id_view, register_user_view, delete_user_view, \
     update_user_view, get_or_create_google_user_view
-from app.api.routes.v1.utils.auth import get_current_active_user, get_password_hash
+from app.api.routes.v1.utils.auth import get_user_by_token
 from app.database.manager import manager
-
 from app.database.models.base import Users
 from app.utils.s3_service import manager as s3_manager
-from app.api.routes.v1.users.groups.router import router as groups_router
 
 router = APIRouter(prefix="/users")
 router.include_router(groups_router)
 
 
 @router.get("/me", response_model=UserRequestResponse)
-async def read_users_me(current_user: Users = Depends(get_current_active_user)):
+async def read_users_me(current_user: Users = Depends(get_user_by_token)):
     dicted = current_user.__dict__
     print(f"/me image: {current_user.image}")
     if current_user.image:
@@ -33,7 +30,7 @@ async def read_users_me(current_user: Users = Depends(get_current_active_user)):
 async def get_user_by_id(
         user_id: int,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)
+        current_user: Users = Depends(get_user_by_token)
 ) -> Users:
     return await get_user_by_id_view(user_id=user_id, session=session)
 
@@ -53,7 +50,7 @@ async def get_or_create_google_user(
 
 @router.delete("/", response_model=DefaultResponse)
 async def delete_user(session: AsyncSession = Depends(manager.get_session_object),
-                        current_user: Users = Depends(get_current_active_user)):
+                      current_user: Users = Depends(get_user_by_token)):
     return await delete_user_view(session=session, current_user=current_user)
 
 
@@ -64,7 +61,7 @@ async def update_user(username=Form(default=None),
                       info=Form(default=None),
                       image: UploadFile = File(default=None),
                       session: AsyncSession = Depends(manager.get_session_object),
-                      current_user: Users = Depends(get_current_active_user),
+                      current_user: Users = Depends(get_user_by_token),
                       ):
     return await update_user_view(
         username=username,

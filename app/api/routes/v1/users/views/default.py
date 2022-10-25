@@ -16,7 +16,7 @@ from app.api.routes.v1.users.groups.utils import get_group_model_or_create_if_no
 from app.api.routes.v1.users.utility_classes import RegisterRequestModel, UserFromDB
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.users.views.utils import get_user_model
-from app.api.routes.v1.utils.auth import get_current_active_user, get_password_hash, create_access_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash, create_access_token
 from app.constants import DEFAULT_USER_GROUP_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database.manager import manager
 from app.database.models.base import Users
@@ -72,7 +72,7 @@ async def get_or_create_google_user_view(
             session.add(user)
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         token = create_access_token(
-            data={"sub": user.username}, expires_delta=access_token_expires
+            username=user.username, expires_delta=access_token_expires
         )
         dicted = user.__dict__.copy()
         print(f"/google image: {dicted['image']}")
@@ -102,7 +102,7 @@ async def register_user_view(user: RegisterRequestModel, session: AsyncSession =
 
 
 async def delete_user_view(session: AsyncSession = Depends(manager.get_session_object),
-                           current_user: Users = Depends(get_current_active_user)):
+                           current_user: Users = Depends(get_user_by_token)):
     user_to_delete = UserFromDB(**current_user.__dict__)
     async with session.begin():
         user: Users = await get_user_model(session=session, username=user_to_delete.username)
@@ -118,7 +118,7 @@ async def update_user_view(username=Form(default=None),
                            info=Form(default=None),
                            image: UploadFile = File(default=None),
                            session: AsyncSession = Depends(manager.get_session_object),
-                           current_user: Users = Depends(get_current_active_user),
+                           current_user: Users = Depends(get_user_by_token),
                            ):
     user_to_update = UserFromDB(**current_user.__dict__)
     async with session.begin():

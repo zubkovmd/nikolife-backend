@@ -11,12 +11,11 @@ class DefaultResponse(BaseModel):
 class ErrorResponse(DefaultResponse):
     pass
 
+
 class DefaultResponseWithPayload(DefaultResponse):
     payload: dict
 
 
-
-# USER RESPONSES
 class User(BaseModel):
     username: str
     image: Optional[str]
@@ -28,12 +27,7 @@ class User(BaseModel):
 class UserRequestResponse(DefaultResponse):
     user: User
 
+
 class UserGoogleAuthResponse(DefaultResponse):
     user: User
     jwt: str
-
-
-# RECIPE RESPONSES
-class RecipeCreatedResponse(DefaultResponse):
-    detail = "Рецепт был добавлен"
-    new_recipe_id: int

@@ -14,7 +14,7 @@ from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe
 from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view, get_available_ingredients_view, \
     get_available_dimensions_view, get_available_ingredients_groups_view, toggle_recipe_like_view, \
     remove_recipe_from_likes_view, find_all_view, get_recipes_compilations_view, create_recipes_compilation_view
-from app.api.routes.v1.utils.auth import get_current_active_user, get_current_user
+from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token
 from app.database.manager import manager
 
 from app.database.models.base import Users
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/recipes")
 async def get_recipes(
         # recipes_request: Optional[GetRecipesRequestModel],
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user),
+        current_user: Users = Depends(get_user_by_token),
         prefer_ingredients: Union[List[str], None] = Query(default=None),
         exclude_groups: Union[List[str], None] = Query(default=None),
         include_categories: Union[List[str], None] = Query(default=None),
@@ -39,7 +39,7 @@ async def get_recipes(
 async def get_liked_recipes(
         # recipes_request: Optional[GetRecipesRequestModel],
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user),
+        current_user: Users = Depends(get_user_by_token),
 ):
     return await get_liked_recipes_view(session, current_user)
 
@@ -47,7 +47,7 @@ async def get_liked_recipes(
 @router.get("/one/{recipe_id}", response_model=RecipeResponseModel)
 async def get_recipe(recipe_id: int,
                      session: AsyncSession = Depends(manager.get_session_object),
-                     current_user: Users = Depends(get_current_active_user)
+                     current_user: Users = Depends(get_user_by_token)
                      ):
     return await get_recipe_view(recipe_id=recipe_id, session=session, current_user=current_user)
 
@@ -57,7 +57,7 @@ async def delete_recipe(
         response: Response,
         recipe_id: int = Body(..., embed=True),
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user), ):
+        current_user: Users = Depends(get_user_by_token), ):
     return await delete_recipe_view(response, recipe_id, session, current_user)
 
 
@@ -66,7 +66,7 @@ async def create_recipe(response: Response, title: str = Form(), image: UploadFi
                         time: int = Form(),
                         complexity: str = Form(), servings: int = Form(), categories: str = Form(), steps: str = Form(),
                         ingredients: str = Form(), session: AsyncSession = Depends(manager.get_session_object),
-                        current_user: Users = Depends(get_current_active_user),
+                        current_user: Users = Depends(get_user_by_token),
                         ):
     return await create_recipe_view(response, title, image, time, complexity, servings,
                                     categories, steps, ingredients, session, current_user)
@@ -80,21 +80,21 @@ async def update_recipe(
         categories: Optional[str] = Form(None), steps: Optional[str] = Form(None),
         ingredients: Optional[str] = Form(None),
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user),
+        current_user: Users = Depends(get_user_by_token),
 ):
     return await update_recipe_view(response, recipe_id, title, image, time, complexity,
                                     servings, categories, steps, ingredients, session, current_user)
 
 
 @router.get("/categories", response_model=RecipeCategoriesResponseModel)
-async def get_recipes_categories(current_user: Users = Depends(get_current_user),
+async def get_recipes_categories(current_user: Users = Depends(get_user_by_token),
                                  session: AsyncSession = Depends(manager.get_session_object)):
     return await get_recipes_categories_view(session)
 
 
 @router.get("/compilations", response_model=RecipeCompilationsResponseModel)
-async def get_recipes_compilations(current_user: Users = Depends(get_current_user),
-                                 session: AsyncSession = Depends(manager.get_session_object)):
+async def get_recipes_compilations(current_user: Users = Depends(get_user_by_token),
+                                   session: AsyncSession = Depends(manager.get_session_object)):
     return await get_recipes_compilations_view(session)
 
 
@@ -105,7 +105,7 @@ async def create_recipes_compilation(
         recipe_ids: List[int] = Form(...),
         image: UploadFile = Form(...),
         title: str = Form(...),
-        current_user: Users = Depends(get_current_user),
+        current_user: Users = Depends(get_user_by_token),
         session: AsyncSession = Depends(manager.get_session_object),
 ):
     return await create_recipes_compilation_view(current_user, CreateCompilationRequestModel(recipe_ids=recipe_ids, image=image, title=title), session)
@@ -113,14 +113,14 @@ async def create_recipes_compilation(
 
 @router.post("/toggle_recipe_like", response_model=DefaultResponse)
 async def toggle_recipe_like(recipe: RecipeLikesRequestModel,
-                              current_user: Users = Depends(get_current_user),
-                              session: AsyncSession = Depends(manager.get_session_object)):
+                             current_user: Users = Depends(get_user_by_token),
+                             session: AsyncSession = Depends(manager.get_session_object)):
     return await toggle_recipe_like_view(recipe=recipe, current_user=current_user, session=session)
 
 
 @router.post("/remove_recipe_from_likes", response_model=DefaultResponse)
 async def remove_recipe_from_likes(recipe: RecipeLikesRequestModel,
-                                   current_user: Users = Depends(get_current_user),
+                                   current_user: Users = Depends(get_user_by_token),
                                    session: AsyncSession = Depends(manager.get_session_object)):
     return await remove_recipe_from_likes_view(recipe=recipe, current_user=current_user, session=session)
 
@@ -149,7 +149,7 @@ async def find_all(string_to_find: str, max_returns: int = 5, session: AsyncSess
 async def get_recipes_by_ingredient(
         ingredient_name: str,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user),
+        current_user: Users = Depends(get_user_by_token),
 ):
     return await get_recipes_by_ingredient_view(ingredient_name=ingredient_name, session=session, current_user=current_user)
 
@@ -158,6 +158,6 @@ async def get_recipes_by_ingredient(
 async def get_recipes_by_ingredient(
         category_name: str,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user),
+        current_user: Users = Depends(get_user_by_token),
 ):
     return await get_recipes_by_category_view(category_name=category_name, session=session, current_user=current_user)

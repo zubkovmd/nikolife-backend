@@ -15,7 +15,7 @@ from app.api.routes.v1.recipes.utility_classes import RecipeLikesRequestModel, F
 from app.api.routes.v1.recipes.views.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.users.views.utils import get_user_model
-from app.api.routes.v1.utils.auth import get_current_user
+from app.api.routes.v1.utils.auth import get_user_by_token
 from app.database.manager import manager
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
     association_recipes_categories, RecipeCompilations
@@ -109,7 +109,7 @@ async def get_available_ingredients_groups_view(session: AsyncSession):
 
 
 async def toggle_recipe_like_view(recipe: RecipeLikesRequestModel,
-                                  current_user: Users = Depends(get_current_user),
+                                  current_user: Users = Depends(get_user_by_token),
                                   session: AsyncSession = Depends(manager.get_session_object)):
     async with session.begin():
         current_user_stmt = select(Users).filter(Users.id == current_user.id).options(selectinload(Users.liked_recipes))
@@ -125,8 +125,8 @@ async def toggle_recipe_like_view(recipe: RecipeLikesRequestModel,
 
 
 async def remove_recipe_from_likes_view(recipe: RecipeLikesRequestModel,
-                                   current_user: Users = Depends(get_current_user),
-                                   session: AsyncSession = Depends(manager.get_session_object)):
+                                        current_user: Users = Depends(get_user_by_token),
+                                        session: AsyncSession = Depends(manager.get_session_object)):
     async with session.begin():
         current_user = await get_user_model(username=current_user.username, session=session)
         recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)

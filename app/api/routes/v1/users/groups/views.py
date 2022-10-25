@@ -9,7 +9,7 @@ from app.api.routes.v1.users.groups.utils import add_group_if_not_exists, remove
 from app.api.routes.v1.users.utility_classes import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import check_is_user_admin, get_current_active_user, check_user_is_in_group
+from app.api.routes.v1.utils.auth import check_is_user_admin, get_user_by_token, check_user_is_in_group
 from app.database.manager import manager
 from app.database.models.base import Users, Groups
 
@@ -17,7 +17,7 @@ from app.database.models.base import Users, Groups
 async def add_group_view(
         group_model: GroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
         await check_is_user_admin(user=current_user, session=session)
@@ -28,7 +28,7 @@ async def add_group_view(
 async def remove_group_view(
         group_model: GroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
         await check_is_user_admin(user=current_user, session=session)
@@ -39,7 +39,7 @@ async def remove_group_view(
 async def change_group_name_view(
         group_model: GroupChangeRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
         await check_is_user_admin(user=current_user, session=session)
@@ -53,7 +53,7 @@ async def change_group_name_view(
 async def add_user_to_group_view(
         group_model: AddUserToGroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
         await check_is_user_admin(user=current_user, session=session)
@@ -74,7 +74,7 @@ async def add_user_to_group_view(
 async def remove_user_from_group_view(
         group_model: AddUserToGroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
         await check_is_user_admin(user=current_user, session=session)

@@ -26,7 +26,7 @@ class MyBackend(AuthenticationBackend):
                 raise HTTPException(status_code=401, detail="Not admin")
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             access_token = create_access_token(
-                data={"sub": user.username}, expires_delta=access_token_expires
+                username=user.username, expires_delta=access_token_expires
             )
 
             # Validate username/password credentials

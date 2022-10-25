@@ -9,7 +9,7 @@ from app.api.routes.v1.users.groups.views import add_group_view, remove_group_vi
     add_user_to_group_view, remove_user_from_group_view
 from app.api.routes.v1.users.utility_classes import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
-from app.api.routes.v1.utils.auth import get_current_active_user
+from app.api.routes.v1.utils.auth import get_user_by_token
 from app.database.manager import manager
 from app.database.models.base import Users, Groups
 
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/groups")
 async def add_group(
         group_model: GroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     return await add_group_view(group_model=group_model, session=session, current_user=current_user)
 
 
@@ -28,7 +28,7 @@ async def add_group(
 async def remove_group(
         group_model: GroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     return await remove_group_view(group_model=group_model, session=session, current_user=current_user)
 
 
@@ -36,7 +36,7 @@ async def remove_group(
 async def change_group_name(
         group_model: GroupChangeRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     return await change_group_name_view(group_model=group_model, session=session, current_user=current_user)
 
 
@@ -44,7 +44,7 @@ async def change_group_name(
 async def add_user_to_group(
         group_model: AddUserToGroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     return await add_user_to_group_view(group_model=group_model, session=session, current_user=current_user)
 
 
@@ -52,5 +52,5 @@ async def add_user_to_group(
 async def add_user_to_group(
         group_model: AddUserToGroupRequestModel,
         session: AsyncSession = Depends(manager.get_session_object),
-        current_user: Users = Depends(get_current_active_user)):
+        current_user: Users = Depends(get_user_by_token)):
     return await remove_user_from_group_view(group_model=group_model, session=session, current_user=current_user)
