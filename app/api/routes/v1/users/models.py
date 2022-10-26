@@ -1,4 +1,4 @@
-"""Module that contains user models that service uses"""
+"""Module contains user models that service uses"""
 
 from typing import Optional
 

@@ -1,10 +1,12 @@
+"""Article routes views"""
+
 import sqlalchemy
 from fastapi import Form, UploadFile, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.blog.utility_classes import GetArticlesResponseModel
+from app.api.routes.v1.blog.models import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.constants import MAX_ARTICLES_COUNT
 from app.database.models.base import Users, Articles
@@ -63,7 +65,7 @@ async def put_article_view(
     :param subtitle: Article subtitle
     :param text: Article text
     :param session: SQLAlchemy session object
-    :param current_user: Object of user that creates article
+    :param current_user: User information object
     :return: DefaultResponse
     """
     async with session.begin():

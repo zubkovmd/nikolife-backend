@@ -26,7 +26,7 @@ async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRe
     """
     Gets user object by token.
 
-    :param current_user: FastAPI dependency. Returns user: User model instance.
+    :param current_user: User information object
     :return: Response with user object.
     """
     user_dict = current_user.__dict__

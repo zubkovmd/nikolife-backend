@@ -1,3 +1,5 @@
+"""Utility methods for blog views"""
+
 from typing import List, Optional
 
 import sqlalchemy

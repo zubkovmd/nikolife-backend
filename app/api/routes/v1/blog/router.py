@@ -1,16 +1,20 @@
+"""
+Blog router module. Contains all routes that interact with user.
+"""
+
 from typing import List, Union
 
 from fastapi import Depends, APIRouter, Query, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.blog.utility_classes import GetStoriesResponseModel, PutStoriesResponseModel, \
+from app.api.routes.v1.blog.models import GetStoriesResponseModel, PutStoriesResponseModel, \
     GetArticlesResponseModel
 from app.api.routes.v1.blog.views.articles import put_article_view, get_articles_view
 from app.api.routes.v1.blog.views.stories import get_stories_view, put_story_view
 from app.api.routes.v1.recipes.utility_classes import GetRecipesResponseModel
 from app.api.routes.v1.recipes.views.default import get_recipes_view
-from app.api.routes.v1.utils.auth import get_user_by_token, check_is_user_admin
+from app.api.routes.v1.utils.auth import get_user_by_token, check_is_user_admin, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.constants import MAX_ARTICLES_COUNT
 from app.database import DatabaseManagerAsync
@@ -19,24 +23,44 @@ from app.database.models.base import Users
 router = APIRouter(prefix="/blog")
 
 
-@router.get("/stories", response_model=GetStoriesResponseModel)
+@router.get("/stories", response_model=GetStoriesResponseModel, dependencies=[Depends(get_user_by_token)])
 async def get_stories(
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
-):
+) -> GetStoriesResponseModel:
+    """
+    Returns last app.constantsMAX_STORIES_COUNT stories.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :param current_user: User information object.
+    :return: Response with stories.
+    """
     return await get_stories_view(session)
 
 
-@router.put("/stories", response_model=DefaultResponse)
+@router.put("/stories", response_model=DefaultResponse, dependencies=[Depends(get_admin_by_token)])
 async def put_story(
-        # story_object: PutStoriesResponseModel,
         title: str = Form(...),
         thumbnail: UploadFile = Form(...),
         images: List[UploadFile] = Form(...),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_admin_by_token),
 ):
-    return await put_story_view(current_user=current_user, session=session, title=title, thumbnail=thumbnail, images=images)
+    """
+     New story adding
+
+    :param title: Story title.
+    :param thumbnail: Story thumbnail.
+    :param images: Story images.
+    :param session: SQLAlchemy session object.
+    :param current_user: User information object
+    :return:
+    """
+    return await put_story_view(
+        current_user=current_user,
+        session=session,
+        title=title,
+        thumbnail=thumbnail,
+        images=images)
 
 
 @router.get("/articles", response_model=GetArticlesResponseModel)
