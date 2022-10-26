@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 
 class UserModel(BaseModel):
+    """Model that represents user from database for authentication methods"""
     id: int
     last_active_time: datetime.datetime
     username: str

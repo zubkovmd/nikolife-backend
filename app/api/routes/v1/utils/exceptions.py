@@ -1,3 +1,5 @@
+"""Exceptions that can occurs in utils"""
+
 from fastapi import HTTPException
 from starlette import status
 

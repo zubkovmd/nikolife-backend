@@ -1,11 +1,11 @@
 from typing import List
 
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.utility_classes import GetStoriesResponseModel
-from app.api.routes.v1.blog.utils.select import get_last_stories
+from app.api.routes.v1.blog.utils import get_last_stories
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import check_is_user_admin
 from app.constants import MAX_STORIES_COUNT

@@ -1,7 +1,7 @@
 # Backend API application for flutter-based mobile app
 
 ## Description
-Preparing application for MVP. So at this point codebase in a bad state and will be refactored
+Preparing application for MVP. Refactoring and documenting in process.
 
 ## Run
 1) ### Define environment variables 
@@ -18,7 +18,7 @@ Preparing application for MVP. So at this point codebase in a bad state and will
       4) `S3__ENDPOINT - aws S3 api compatible cloud storage endpoint (http://127.0.0.1:9000)`
       5) `S3__BUCKET - storage bucket (bucket)`
    3) #### Sentry
-      1) `SENTRY__DSN - sentry dsn for errors. Optional`
+      1) `SENTRY__DSN - sentry dsn. Optional`
    4) #### Other
       1) `ENVIRONMENT= one of development / testin / production`
 2) ### Run for development
