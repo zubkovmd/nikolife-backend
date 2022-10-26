@@ -1,3 +1,5 @@
+"""Root v1 API router"""
+
 import fastapi
 from datetime import timedelta
 
@@ -18,6 +20,12 @@ router.include_router(blog_router)
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    Route that authenticates user and returns web token
+
+    :param form_data: User authentication data. Contains username and password.
+    :return: Acess token object that contains **token_type** and **access_token**
+    """
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(

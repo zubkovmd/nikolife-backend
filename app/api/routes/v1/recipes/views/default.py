@@ -18,6 +18,7 @@ from app.api.routes.v1.recipes.views.utils import parse_ingredients_to_pydantic_
     get_recipe_by_id
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
+from app.api.routes.v1.utils.service_models import UserModel
 from app.constants import ADMIN_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users, Recipes, Ingredients, RecipeDimensions, RecipeIngredients, \
@@ -34,7 +35,7 @@ async def get_recipes_view(
         include_categories: Optional[List[str]],
         compilation: Optional[str],
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Users = Depends(get_user_by_token),):
+        current_user: UserModel = Depends(get_user_by_token),):
     async with session.begin():
         stmt = (
             select(Users)
@@ -90,7 +91,7 @@ async def get_recipes_view(
 async def get_recipes_by_ingredient_view(
         ingredient_name: str,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Users = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_user_by_token),
 ):
     stmt = (  # TODO: Вынести в отдельную функцию
         select(Users)
@@ -131,7 +132,7 @@ async def get_recipes_by_ingredient_view(
 async def get_recipes_by_category_view(
         category_name: str,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Users = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_user_by_token),
 ):
     stmt = (  # TODO: Вынести в отдельную функцию
         select(Users)
@@ -173,7 +174,7 @@ async def get_recipes_by_category_view(
 
 async def get_liked_recipes_view(
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Users = Depends(get_user_by_token)):
+        current_user: UserModel = Depends(get_user_by_token)):
     async with session.begin():
         stmt = (  # TODO: Вынести в отдельную функцию
             select(Users)
@@ -284,7 +285,7 @@ async def create_recipe_view(
         steps: str = Form(),
         ingredients: str = Form(),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Users = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_user_by_token),
 ):
     ingredients: List[CreateRecipeIngredientRequestModel] = parse_ingredients_to_pydantic_models(ingredients=ingredients)
     steps: List[CreateRecipeStepRequestModel] = parse_steps_to_pydantic_models(steps=steps)
@@ -321,7 +322,7 @@ async def update_recipe_view(
     steps: Optional[str] = Form(None),
     ingredients: Optional[str] = Form(None),
     session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-    current_user: Users = Depends(get_user_by_token),
+    current_user: UserModel = Depends(get_user_by_token),
 ):
     async with session.begin():
         recipe = await get_recipe_by_id(recipe_id=recipe_id, session=session)
