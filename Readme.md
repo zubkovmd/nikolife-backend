@@ -1,7 +1,7 @@
 # Backend API application for flutter-based mobile app
 
 ## Description
-Here you can see a demo of the application:
+Here you can see a demo of the application:  
 ![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/app_demo.gif)
 
 ## Run
