@@ -1,7 +1,8 @@
 # Backend API application for flutter-based mobile app
 
 ## Description
-Preparing application for MVP. Refactoring and documenting in process.
+Here you can see a demo of the application:
+![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/app_demo.gif)
 
 ## Run
 1) ### Define environment variables 
