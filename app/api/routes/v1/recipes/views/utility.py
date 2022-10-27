@@ -1,3 +1,7 @@
+"""
+Utility views for recipe routes
+"""
+
 from typing import List
 
 import sqlalchemy
@@ -7,76 +11,109 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from starlette import status
-from sqlalchemy_searchable import search
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.recipes.utility_classes import RecipeLikesRequestModel, FindRequestModel, FindResponseModel, \
-    RecipeFindResponseModel, IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel
-from app.api.routes.v1.recipes.views.utils import get_recipe_by_id, get_category_image
-from app.api.routes.v1.users.utils import get_user_by_username
+from app.api.routes.v1.recipes.utility_classes import RecipeLikesRequestModel, FindResponseModel, \
+    RecipeFindResponseModel, IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel, \
+    RecipeCategoriesResponseModel, RecipeCategoryResponseModel, RecipeCompilationsResponseModel, \
+    RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel, \
+    GetIngredientGroupsResponseModel
+from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
+from app.api.routes.v1.users.utils import get_user_by_username, get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
-    association_recipes_categories, RecipeCompilations
+    RecipeCompilations
 from app.utils import S3Manager
 
 
-async def get_recipes_categories_view(session: AsyncSession):
+async def get_recipes_categories_view(session: AsyncSession) -> RecipeCategoriesResponseModel:
+    """
+    View returns all recipe categories in service. As category image service selects
+    image of first recipe with image in this category
+
+    :param session: SQLAlchemy AsyncSession
+    :return: Response with existing categories.
+    """
     async with session.begin():
+        # First, found all categories
         stmt = sqlalchemy.select(RecipeCategories.name)
         response = await session.execute(stmt)
         categories = response.fetchall()
+        # If categories was found, then for each category we should set image.
         if categories:
-            response = {"categories": []}
+            found_categories = []
             for category in categories:
                 image = await get_category_image(category=category[0], session=session)
                 if image is None:
                     continue
-                response["categories"].append(
-                    {
-                        "name": category[0],
-                        "image": image
-                    }
-                )
-            return response
+                found_categories.append(RecipeCategoryResponseModel(name=category[0], image=image))
+            return RecipeCategoriesResponseModel(categories=found_categories)
         else:
-            return {"categories": []}
+            return RecipeCategoriesResponseModel(categories=[])
 
 
-async def get_recipes_compilations_view(session: AsyncSession):
+async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilationsResponseModel:
+    """
+    View returns all recipe compilations registered in service.
+
+    :param session: SQLALchemy AsyncSession object.
+    :return: Response with compilations
+    """
     async with session.begin():
+        # First, select all existing compilations
         stmt = sqlalchemy.select(RecipeCompilations)
         response = await session.execute(stmt)
         compilations: List[RecipeCompilations] = response.scalars().all()
+        # If compilations found, for each we should make link to s3
         if compilations:
-            response = {"compilations": []}
+            found_compilations = []
             for compilation in compilations:
-                response["compilations"].append(
-                    {
-                        "name": compilation.name,
-                        "image": S3Manager.get_instance().get_url(compilation.image)
-                    }
+
+                found_compilations.append(
+                    RecipeCompilationResponseModel(
+                        name=compilation.name,
+                        image=S3Manager.get_instance().get_url(compilation.image)
+                    )
                 )
-            return response
+            return RecipeCompilationsResponseModel(compilations=found_compilations)
         else:
-            return {"compilations": []}
+            return RecipeCompilationsResponseModel(compilations=[])
 
 
 async def create_recipes_compilation_view(
-        current_user: Users,
+        current_user: UserModel,
         request: CreateCompilationRequestModel,
         session: AsyncSession):
+    """
+    View that creates recipe compilation.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set an image.
+
+    :param current_user: User information object
+    :param request: Request with compilation data
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with status
+    """
     async with session.begin():
+        # First, select all recipes, selected for new compilation
         stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
         recipes = (await session.execute(stmt)).scalars().all()
+        # Load compilation image to s3
         filename = f"{current_user.username}/compilations/{request.image.filename}"
         S3Manager.get_instance().send_memory_file_to_s3(request.image.file, filename)
+        # Add new compilation
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
     return DefaultResponse(detail="Подборка добавлена")
 
 
-async def get_available_ingredients_view(session: AsyncSession):
+async def get_ingredients_view(session: AsyncSession) -> GetIngredientsResponseModel:
+    """
+    View that returns all ingredients in service.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with existing ingredients.
+    """
     async with session.begin():
         stmt = sqlalchemy.select(Ingredients.name)
         response = await session.execute(stmt)
@@ -85,10 +122,16 @@ async def get_available_ingredients_view(session: AsyncSession):
             ingredients = [i[0] for i in ingredients]
         else:
             ingredients = []
-        return {"ingredients": ingredients}
+        return GetIngredientsResponseModel(ingredients=ingredients)
 
 
-async def get_available_dimensions_view(session: AsyncSession):
+async def get_dimensions_view(session: AsyncSession) -> GetDimensionsResponseModel:
+    """
+    View that returns all dimensions in service.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with existing dimensions.
+    """
     async with session.begin():
         stmt = sqlalchemy.select(RecipeDimensions.name)
         response = await session.execute(stmt)
@@ -97,10 +140,16 @@ async def get_available_dimensions_view(session: AsyncSession):
             dimensions = [i[0] for i in dimensions]
         else:
             dimensions = []
-        return {"dimensions": dimensions}
+        return GetDimensionsResponseModel(dimensions=dimensions)
 
 
-async def get_available_ingredients_groups_view(session: AsyncSession):
+async def get_ingredients_groups_view(session: AsyncSession) -> GetIngredientGroupsResponseModel:
+    """
+    View that returns all ingredient groups in service.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with existing ingredient groups.
+    """
     async with session.begin():
         stmt = sqlalchemy.select(IngredientsGroups.name)
         response = await session.execute(stmt)
@@ -109,40 +158,50 @@ async def get_available_ingredients_groups_view(session: AsyncSession):
             groups = [i[0] for i in groups]
         else:
             groups = []
-        return {"groups": groups}
+        return GetIngredientGroupsResponseModel(groups=groups)
 
 
 async def toggle_recipe_like_view(
         recipe: RecipeLikesRequestModel,
         current_user: UserModel = Depends(get_user_by_token),
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+) -> DefaultResponse:
+    """
+    This view is set's recipe to 'liked' state request user did not like it before, if recipe is already liked,
+    then like will be unset (row will be deleted for association table USERS-RECIPES).
+
+    :param recipe: Recipe request object that contains recipe id.
+    :param current_user: User information object.
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with status
+    """
     async with session.begin():
-        current_user_stmt = select(Users).filter(Users.id == current_user.id).options(selectinload(Users.liked_recipes))
-        resp = await session.execute(current_user_stmt)
-        current_user: Users = resp.scalars().first()
+        # First we needs to get mapped user object from database
+        current_user = get_user_by_id(session=session, user_id=current_user.id, join_tables=[Users.liked_recipes])
+        # Then we need to get recipe object
         recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)
+        # Now if recipe is not liked, then we should add it to likes
         if recipe not in current_user.liked_recipes:
             current_user.liked_recipes.append(recipe)
             return DefaultResponse(detail="Рецепт добавлен в избранное")
+        # If recipe already liked, then we should delete it from likes
         else:
             current_user.liked_recipes.remove(recipe)
             return DefaultResponse(detail="Рецепт удален из избранного")
 
 
-async def remove_recipe_from_likes_view(
-        recipe: RecipeLikesRequestModel,
-        current_user: UserModel = Depends(get_user_by_token),
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
-    async with session.begin():
-        current_user = await get_user_by_username(username=current_user.username, session=session)
-        recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)
-        if recipe.id not in [recipe.id for recipe in current_user.liked_recipes]:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Рецепт не в избранном")
-        current_user.liked_recipes.remove(recipe)
-    return DefaultResponse(detail="Рецепт удален из избранного")
-
-
 async def search_by_field(string_to_find, max_returns, model, field, session):
+    """
+    Utility method that search in selected field in selected model for entries. If there are full compare, then
+    method will return only fully compared rows, else it will return **max_returns** rows with substring compares.
+
+    :param string_to_find: String for search.
+    :param max_returns: Max returns for semi-compared rows.
+    :param model: SQLAlchemy model for search.
+    :param field: SQLAlchemy model field for search.
+    :param session: SQLAlchemy AsyncSession object.
+    :return: List of found objects.
+    """
     search_by_full_compare = sqlalchemy.select(model).where(field == string_to_find).limit(1)
     resp = await session.execute(search_by_full_compare)
     resp = resp.scalars().first()
@@ -162,7 +221,18 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
 async def find_all_view(
         string_to_find: str,
         max_returns: int = 5,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)):
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+) -> FindResponseModel:
+    """
+    Method will search string_to_find in all searchable models: recipes, ingredients, recipe categories. First,
+    it returns only fully compared database rows for each model. If fully compared rows not found, then it searches
+    semi-compared rows.
+
+    :param string_to_find: String for search.
+    :param max_returns: Maximum returned rows for each model.
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with found objects for each model.
+    """
     async with session.begin():
         response_model = FindResponseModel(recipes=[], ingredients=[], categories=[])
 

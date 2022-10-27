@@ -10,6 +10,7 @@ class CredentialsException(HTTPException):
     """
 
     def __init__(self):
+        """Exception initializer"""
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
