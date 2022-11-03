@@ -72,6 +72,6 @@ async def get_google_user(google_token: str) -> GoogleResponseModel:
     url = "https://www.googleapis.com/oauth2/v1/userinfo"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.json()["message"])
+        raise HTTPException(status_code=response.status_code, detail="Нужно повторить вход в приложение")
     response = response.json()
     return GoogleResponseModel(**response)
