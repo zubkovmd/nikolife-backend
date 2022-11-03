@@ -4,7 +4,7 @@ python-jose[cryptography]
 python-multipart
 pydantic
 starlette
-SQLAlchemy
+SQLAlchemy[asyncio]
 boto3
 aiogram
 alembic
@@ -14,4 +14,6 @@ sqladmin
 uvicorn
 asyncpg
 sqlalchemy_searchable
-psycopg2
+psycopg2-binary
+Pillow
+greenlet
