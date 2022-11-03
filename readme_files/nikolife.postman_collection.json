@@ -1,0 +1,1416 @@
+{
+	"info": {
+		"_postman_id": "0807857a-1497-4961-ba0c-0d7e1f7be286",
+		"name": "nikolife",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14948014"
+	},
+	"item": [
+		{
+			"name": "recipe",
+			"item": [
+				{
+					"name": "compilations",
+					"item": [
+						{
+							"name": "get compilations",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/compilations/",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"recipes",
+										"compilations",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "put compilation",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "title",
+											"value": "Для праздника",
+											"description": "Compilation title",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "1",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "2",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "3",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "4",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "5",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "6",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "7",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "8",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "9",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "10",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "recipe_ids",
+											"value": "11",
+											"description": "Id of recipe in compilation",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"contentType": "",
+											"description": "Compilation image",
+											"type": "file",
+											"src": "/Users/maksimzubkov/Desktop/flutter_test/files/compilation_1.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/compilations",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"recipes",
+										"compilations"
+									],
+									"query": [
+										{
+											"key": "image",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "create recipe",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "new_recipe",
+									"contentType": "application/json",
+									"description": "Recipe title",
+									"type": "text"
+								},
+								{
+									"key": "time",
+									"value": "15",
+									"contentType": "application/json",
+									"description": "Recipe cooking time",
+									"type": "text"
+								},
+								{
+									"key": "complexity",
+									"value": "Средний",
+									"contentType": "application/json",
+									"description": "Recipe complexity",
+									"type": "text"
+								},
+								{
+									"key": "servings",
+									"value": "1",
+									"contentType": "application/json",
+									"description": "Recipe servings count",
+									"type": "text"
+								},
+								{
+									"key": "categories",
+									"value": "[\"Салаты\"]",
+									"contentType": "application/json",
+									"description": "Recipe ",
+									"type": "text"
+								},
+								{
+									"key": "steps",
+									"value": "[{\"step_num\":1, \"content\":\"Шаг рецепта 1\"},\n{\"step_num\":2, \"content\":\"Шаг рецепта 2\"},]",
+									"contentType": "application/json",
+									"description": "Recipe steps (list of objects)",
+									"type": "text"
+								},
+								{
+									"key": "ingredients",
+									"value": "[{\"name\": \"Яблоко\", \"weight\": 10, \"dimension\":\"гр\", \"groups\":[\"Фрукты\", \"Сахар\"]}]",
+									"contentType": "application/json",
+									"description": "Recipe ingredients (list of objects)",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"description": "recipe image",
+									"type": "file",
+									"src": "compilation_1.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update recipe",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "recipe_id",
+									"value": "184",
+									"contentType": "application/json",
+									"description": "Id of recipe that should be updated",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "updated_recipe",
+									"contentType": "application/json",
+									"description": "New recipe title",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "time",
+									"value": "25",
+									"contentType": "application/json",
+									"description": "New cooking time",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "complexity",
+									"value": "hard",
+									"contentType": "application/json",
+									"description": "New complexity",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "servings",
+									"value": "5",
+									"contentType": "application/json",
+									"description": "New servings count",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "categories",
+									"value": "[\"Салаты\",\"new_category\"]",
+									"contentType": "application/json",
+									"description": "New categories list",
+									"type": "text"
+								},
+								{
+									"key": "steps",
+									"value": "[{\"step_num\":1, \"content\":\"Шаг рецепта 1\"},\n{\"step_num\":2, \"content\":\"Шаг рецепта 2\"},]",
+									"contentType": "application/json",
+									"description": "New steps list",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "ingredients",
+									"value": "[{\"name\": \"Яблоко\", \"weight\": 10, \"dimension\":\"гр\", \"groups\":[\"Фрукты\", \"Сахар\"]}]",
+									"contentType": "application/json",
+									"description": "New ingredients list",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "image",
+									"description": "New recipe image",
+									"type": "file",
+									"src": "compilation_1.png",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get recipes",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes"
+							],
+							"query": [
+								{
+									"key": "prefer_ingredients",
+									"value": "Киноа",
+									"disabled": true
+								},
+								{
+									"key": "exclude_groups",
+									"value": "овощи",
+									"disabled": true
+								},
+								{
+									"key": "exclude_groups",
+									"value": "Овощи",
+									"disabled": true
+								},
+								{
+									"key": "include_categories",
+									"value": "Салаты",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get recipes by ingredient",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/get_recipes_by_ingredient?ingredient_name=Киноа",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"get_recipes_by_ingredient"
+							],
+							"query": [
+								{
+									"key": "ingredient_name",
+									"value": "Киноа"
+								},
+								{
+									"key": "exclude_groups",
+									"value": "Фрукты",
+									"disabled": true
+								},
+								{
+									"key": "",
+									"value": "Салаты",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get recipes by category",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/get_recipes_by_category?category_name=Салаты",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"get_recipes_by_category"
+							],
+							"query": [
+								{
+									"key": "category_name",
+									"value": "Салаты"
+								},
+								{
+									"key": "prefer_ingredients",
+									"value": "Капуста",
+									"disabled": true
+								},
+								{
+									"key": "exclude_groups",
+									"value": "Фрукты",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get one recipe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/one/4",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"one",
+								"4"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete recipe",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipe_id\": 125\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ingredients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/utils/get_available_ingredients",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"utils",
+								"get_available_ingredients"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/categories/",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"categories",
+								""
+							],
+							"query": [
+								{
+									"key": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find everywhere",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/utils/find/?string_to_find=Киноа",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"utils",
+								"find",
+								""
+							],
+							"query": [
+								{
+									"key": "string_to_find",
+									"value": "Киноа"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get dimensions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/utils/get_available_dimensions",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"utils",
+								"get_available_dimensions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get ingredients groups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/utils/get_available_ingredients_groups",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"utils",
+								"get_available_ingredients_groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toggle recipe like",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"recipe_id\": \"4\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/recipes/toggle_recipe_like",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"recipes",
+								"toggle_recipe_like"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "get Authorization token",
+					"request": {
+						"auth": {
+							"type": "oauth2",
+							"oauth2": [
+								{
+									"key": "password",
+									"value": "{{default_password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{default_username}}",
+									"type": "string"
+								},
+								{
+									"key": "accessTokenUrl",
+									"value": "http://127.0.0.1:8000/api/v1/token",
+									"type": "string"
+								},
+								{
+									"key": "client_authentication",
+									"value": "body",
+									"type": "string"
+								},
+								{
+									"key": "grant_type",
+									"value": "password_credentials",
+									"type": "string"
+								},
+								{
+									"key": "tokenName",
+									"value": "access_token",
+									"type": "string"
+								},
+								{
+									"key": "useBrowser",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "authUrl",
+									"value": "http://127.0.0.1/api/v1/token",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "admin@mail.ru",
+									"contentType": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "ADMIN_PASSWORD",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/token",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"token"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "username",
+									"disabled": true
+								}
+							]
+						},
+						"description": "get authentication token"
+					},
+					"response": []
+				},
+				{
+					"name": "register default user",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"default_user\",\n    \"password\": \"default_user_password\",\n    \"email\": \"default_user@mail.ru\",\n    \"name\": \"Default User\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get me",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/me",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete me (CHECK COMMENT BEFORE USE)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update user",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "info",
+									"value": "info",
+									"description": "new user info",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"description": "new user image",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get user by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/1",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "blog",
+			"item": [
+				{
+					"name": "stories",
+					"item": [
+						{
+							"name": "get stories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/blog/stories",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"blog",
+										"stories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "put story",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "title",
+											"value": "Уход за чугуном",
+											"description": "Title (text on stori thumbnail)",
+											"type": "text"
+										},
+										{
+											"key": "thumbnail",
+											"description": "Story thumbnail",
+											"type": "file",
+											"src": "story_thumbnail.jpeg"
+										},
+										{
+											"key": "images",
+											"description": "Story image (must be passed in the correct order. this first)",
+											"type": "file",
+											"src": "/Users/maksimzubkov/Desktop/flutter_test/files/story_image_1.png"
+										},
+										{
+											"key": "images",
+											"description": "Story image (this will be second)",
+											"type": "file",
+											"src": "/Users/maksimzubkov/Desktop/flutter_test/files/story_image_2.png"
+										},
+										{
+											"key": "images",
+											"description": "Story image (and this will be third story image)",
+											"type": "file",
+											"src": "/Users/maksimzubkov/Desktop/flutter_test/files/story_image_3.png"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/blog/stories",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"blog",
+										"stories"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "articles",
+					"item": [
+						{
+							"name": "put article",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "title",
+											"value": "Питание в офисе — как поддержать свое здоровье и дух? Есть ли выход...",
+											"description": "Article title",
+											"type": "text"
+										},
+										{
+											"key": "image",
+											"description": "Article image",
+											"type": "file",
+											"src": "article_picture.jpeg"
+										},
+										{
+											"key": "subtitle",
+											"value": "Компания Google c 1999 года предоставляет доступ к завтракам, обедам, ужинам и перекусам всем своим сотрудникам. Эта практика началась с Силиконовой Долины и распространилась на все офисы компании по миру.",
+											"description": "Article subtitle",
+											"type": "text"
+										},
+										{
+											"key": "text",
+											"value": "<bold>Секреты правильного питания в офисе</bold><br/><br/>\nКоличество еды, которое окружает среднестатистического гуглера просто огромное, и не всегда эта еда полезная, ведь есть неограниченный доступ к тортам, шоколаду, пиццам, газировка и даже изысканным деликатесам. Как правило сотрудники в первый год набирают известный Google Stone (около 6 кг). Но несмотря на такие перемены, за три года работы в компании мой вес не изменился, а уровень здоровья только вырос. Какие же основные секреты?<br/><br/>\n<bold>1. Ищите единомышленников.<bold/>Для меня это мой любимый доктор Кристина Журавлева из компании Nikolife. Я нахожусь на ВИП ведении, а также получаю поддержку из женского клуба и чата “Душевная кухня”.<br/><br/>\n\n<bold>2. Определить для себя ценность здоровья и зачем оно нужно.<bold/> Когда мы делаем выбор между тортиком и салатом, нам нужно понимать для чего мы выбрали салат.<br/><br/>\n\n<bold>3. Прогулки (даже 10 минут) после каждого приема пищи.<bold/> Они помогут сбалансировать сахар в крови и уменьшат тягу к сладкому и углеводам в течение последующего дня.<br/><br/>\n\n<bold>4. Питание по принципу тарелки.<bold/> Такую тарелку надо уметь адаптировать под себя, половину ее должны занимать свежие и обработанные овощи, одну четверть белок и жиры, одну четверть сложные углеводы.<br/><br/>\n\n<bold>5. Четкие приемы пищи.<bold/> В идеале принимать пищу в одинаковое время.<br/><br/>\n\n<bold>6. Не принимать пищу за компанию, если вы не голодны.<bold/> Коллега позвал на кофе? Не беда! - Идете вместе на общую кухню и завариваете себе свой травяной чай.<br/><br/>\n\n<bold>7. Планирование.<bold/> Подумайте заранее, чего Вам не хватает в офисных обедах и ужинах. Захватите это из дома и добавляйте к приему пищи.<br/><br/>\n\n<bold>8. Культура питания.<bold/> Жуйте медленно, осознанно, ни в коем случае не перед ноутбуком. Также я не рекомендую ставить рабочие встречи на время обеда.<br/><br/>\n\n<bold>9. Еда из дома.<bold/> Если питание вам не подходит, а меню от работодателя совершенно точно отнимает вашу молодость и годы жизни, носите еду с собой. <br/><br/>",
+											"description": "Article text",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/blog/articles",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"blog",
+										"articles"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get articles",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/blog/articles",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{host}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"blog",
+										"articles"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "groups",
+			"item": [
+				{
+					"name": "create new group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_name\": \"new_group\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/groups/",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"groups",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete group",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"group_name\": \"new_group\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/groups/",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"groups",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "change group name",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"old_group_name\": \"group_name_to_change\",\n    \"new_group_name\": \"new_group_name\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/groups/",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"groups",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add user to group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"group_name\": \"new_group\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/groups/add_user_to_group",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"groups",
+								"add_user_to_group"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "remove user from group",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"user_id\": 1,\n    \"group_name\": \"new_group\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{protocol}}://{{host}}:{{port}}/api/v1/users/groups/remove_user_from_group",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"api",
+								"v1",
+								"users",
+								"groups",
+								"remove_user_from_group"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "password",
+				"value": "ADMIN_PASSWORD",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "admin@mail.ru",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "{{protocol}}://{{host}}:{{port}}/api/v1/token",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "access_token",
+				"type": "string"
+			},
+			{
+				"key": "challengeAlgorithm",
+				"value": "S256",
+				"type": "string"
+			},
+			{
+				"key": "grant_type",
+				"value": "password_credentials",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "http://127.0.0.1/api/v1/token",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "client_authentication",
+				"value": "body",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "protocol",
+			"value": "http"
+		},
+		{
+			"key": "host",
+			"value": "84.252.73.50",
+			"type": "string"
+		},
+		{
+			"key": "port",
+			"value": "80",
+			"type": "string"
+		},
+		{
+			"key": "protocol_test",
+			"value": "http",
+			"type": "string"
+		},
+		{
+			"key": "host_test",
+			"value": "84.252.73.50",
+			"type": "string"
+		},
+		{
+			"key": "port_test",
+			"value": "80",
+			"type": "string"
+		}
+	]
+}
