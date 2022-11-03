@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload, selectinload, lazyload
 from starlette import status
 
 from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.utility import get_raw_filename
 from app.constants import ADMIN_GROUP_NAME
 from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel, CreateRecipeStepRequestModel, \
@@ -331,7 +332,7 @@ def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipe
     for recipe in recipes:
         recipe_dicted = recipe.__dict__
         if recipe.image:
-            image = S3Manager.get_instance().get_url(recipe.image)
+            image = S3Manager.get_instance().get_url(f"{recipe.image}_small.jpg")
         else:
             image = None
         recipe_dicted["image"] = image
@@ -383,7 +384,7 @@ def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
                                 list(sorted(recipe_response["steps"], key=lambda x: x.step_num))]
     recipe_response["categories"] = [i.name for i in recipe_response["categories"]]
     recipe_response["image"] = None if recipe_response["image"] is None else S3Manager.get_instance().get_url(
-        recipe_response["image"])
+        f"{recipe_response['image']}_med.jpg")
     recipe_response["liked"] = current_user in recipe.liked_by
     return recipe_response
 
@@ -427,8 +428,8 @@ async def create_new_recipe(
     # adding categories to recipe. if ingredient don't exist, first create new ingredient
     for category in categories:
         new_recipe.categories.append(await get_category_or_create_if_not_exists(category, session))
-    filename = f"/{current_user.username}/recipes/{new_recipe.title}_{int(datetime.now().timestamp())}.jpg"
-    S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
+    filename = f"{current_user.username}/recipes/{new_recipe.title}/{get_raw_filename(image.filename)}"
+    S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
     new_recipe.image = filename
     session.add(new_recipe)
     await session.flush()
@@ -469,8 +470,8 @@ async def update_recipe(
     if title:
         recipe.title = title
     if image:
-        filename = f"/{current_user.username}/recipes/{recipe.title}_{int(datetime.now().timestamp())}.jpg"
-        S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
+        filename = f"{current_user.username}/recipes/{recipe.title}/{get_raw_filename(image.filename)}"
+        S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
         recipe.image = filename
     if time:
         recipe.time = time
@@ -513,7 +514,7 @@ async def get_category_image(category: str, session: AsyncSession) -> Optional[s
         raise HTTPException(status_code=404, detail="Категория не найдена")
     for recipe in category.recipes:
         if recipe.image:
-            return S3Manager.get_instance().get_url(recipe.image)
+            return S3Manager.get_instance().get_url(f"{recipe.image}_small.jpg")
     return None
 
 

@@ -32,7 +32,7 @@ async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRe
     user_dict = current_user.__dict__
     if current_user.image:
         # if user has a profile image, then we should get its link from s3
-        user_dict["image"] = S3Manager.get_instance().get_url(current_user.image)
+        user_dict["image"] = S3Manager.get_instance().get_url(f"{current_user.image}_small.jpg")
     return UserRequestResponse(detail="Пользователь найден", user=User(**user_dict))
 
 

@@ -20,6 +20,7 @@ from app.api.routes.v1.users.models import RegisterRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id, get_google_user, get_user_by_username
 from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash, create_access_token
 from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.utility import get_raw_filename
 from app.constants import DEFAULT_USER_GROUP_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
@@ -42,7 +43,7 @@ async def get_user_by_id_view(
         dicted = user.__dict__
         if user.image:
             # if user has a profile image, then we should get its link from s3
-            dicted["image"] = S3Manager.get_instance().get_url(user.image)
+            dicted["image"] = S3Manager.get_instance().get_url(f"{user.image}_small.jpg")
         return UserRequestResponse(detail="Пользователь найден", user=User(**dicted))
 
 
@@ -74,9 +75,11 @@ async def get_or_create_google_user_view(
                 name=google_user.name,
             )
             if google_user.picture:  # if use has a Google picture, then we should add it to service
-                filename = f"{google_user.email}/avatar.png"
-                S3Manager.get_instance().send_memory_file_to_s3(file=BytesIO(requests.get(google_user.picture).content),
-                                                                object_key=filename)
+
+                filename = f"{google_user.email}/avatar"
+                S3Manager.get_instance().send_image_shaped(
+                    image=UploadFile(file=BytesIO(requests.get(google_user.picture).content), filename=filename),
+                    base_filename=filename)
                 user.image = filename
             # add default 'user' group to new user groups
             user.groups.append(await get_group_model_or_create_if_not_exists(group_name=DEFAULT_USER_GROUP_NAME,
@@ -88,7 +91,7 @@ async def get_or_create_google_user_view(
         )
         dicted = user.__dict__.copy()
         if user.image:
-            dicted["image"] = S3Manager.get_instance().get_url(user.image)
+            dicted["image"] = S3Manager.get_instance().get_url(f"{user.image}_small.jpg")
         return UserGoogleAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=token)
 
 
@@ -170,7 +173,7 @@ async def update_user_view(username=Form(default=None),
         if info:
             user.info = info
         if image:
-            object_key = f"{user.username}/profile_photo.jpg"
-            S3Manager.get_instance().send_memory_file_to_s3(image.file, object_key=object_key)
-            user.image = object_key
+            filename = f"{user.email}/avatar/{get_raw_filename(image.filename)}"
+            S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+            user.image = filename
         return DefaultResponse(detail="Информация о пользователе обновлена")

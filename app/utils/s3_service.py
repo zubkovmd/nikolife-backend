@@ -1,10 +1,15 @@
 """
 Module contains AWS S3 compatible manager for file manipulation.
 """
+import io
 
 import boto3
 import logging
 
+from PIL import ImageOps, Image
+from fastapi import UploadFile
+
+from app.api.routes.v1.utils.utility import convert_pillow_image_to_jpg_bytes
 from app.config import Settings
 
 
@@ -49,6 +54,40 @@ class S3Manager:
         :return:
         """
         self.s3_client.upload_file(Filename=filename, Bucket=self._bucket, Key=object_key)
+
+    def send_image_shaped(self, image: UploadFile, base_filename):
+        """
+        Method reshapes image to big, med, small and micro sizes and uploads these to s3.
+
+        :param image: UploadFile FastApi object
+        :param base_filename: base filename
+        :return:
+        """
+        image_bytes = image.file.read()
+        # big image
+        filename_big = f"{base_filename}_big.jpg"
+        self.send_memory_file_to_s3(
+            convert_pillow_image_to_jpg_bytes(ImageOps.contain(Image.open(io.BytesIO(image_bytes)), (2048, 2048))),
+            filename_big
+        )
+        # medium image
+        filename_med = f"{base_filename}_med.jpg"
+        self.send_memory_file_to_s3(
+            convert_pillow_image_to_jpg_bytes(ImageOps.contain(Image.open(io.BytesIO(image_bytes)), (1024, 1024))),
+            filename_med
+        )
+        # small image
+        filename_small = f"{base_filename}_small.jpg"
+        self.send_memory_file_to_s3(
+            convert_pillow_image_to_jpg_bytes(ImageOps.contain(Image.open(io.BytesIO(image_bytes)), (512, 512))),
+            filename_small
+        )
+        # micro image
+        filename_micro = f"{base_filename}_micro.jpg"
+        self.send_memory_file_to_s3(
+            convert_pillow_image_to_jpg_bytes(ImageOps.contain(Image.open(io.BytesIO(image_bytes)), (256, 256))),
+            filename_micro
+        )
 
     def send_memory_file_to_s3(self, file, object_key) -> None:
         """

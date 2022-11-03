@@ -8,9 +8,11 @@ from sqlalchemy.orm import selectinload
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
+from app.api.routes.v1.utils.utility import get_raw_filename
 from app.constants import MAX_ARTICLES_COUNT
 from app.database.models.base import Users, Articles
 from app.utils import S3Manager
+from PIL import Image, ImageOps
 import locale
 # locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 
@@ -40,7 +42,7 @@ async def get_articles_view(
                     "subtitle": article.subtitle,
                     "created_at": article.created_at.strftime(u'%d %B %Y'),
                     "text": article.text,
-                    "image": S3Manager.get_instance().get_url(article.image),
+                    "image": S3Manager.get_instance().get_url(f"{article.image}_med.jpg"),
                     "user_id": article.user.id,
                 }
                 for article
@@ -70,8 +72,9 @@ async def put_article_view(
     """
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
-        filename = f"{current_user.username}/blog/{image.filename}"
-        S3Manager.get_instance().send_memory_file_to_s3(image.file, filename)
+        filename = f"{current_user.username}/blog/{get_raw_filename(image.filename)}"
+        S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+
         new_article = Articles(
             title=title,
             subtitle=subtitle,

@@ -22,6 +22,7 @@ from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_username, get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.utility import get_raw_filename
 from app.database import DatabaseManagerAsync
 from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
     RecipeCompilations
@@ -74,7 +75,7 @@ async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilat
                 found_compilations.append(
                     RecipeCompilationResponseModel(
                         name=compilation.name,
-                        image=S3Manager.get_instance().get_url(compilation.image)
+                        image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg")
                     )
                 )
             return RecipeCompilationsResponseModel(compilations=found_compilations)
@@ -100,8 +101,8 @@ async def create_recipes_compilation_view(
         stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
         recipes = (await session.execute(stmt)).scalars().all()
         # Load compilation image to s3
-        filename = f"{current_user.username}/compilations/{request.image.filename}"
-        S3Manager.get_instance().send_memory_file_to_s3(request.image.file, filename)
+        filename = f"{current_user.username}/compilations/{request.title}/{get_raw_filename(request.image.filename)}"
+        S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
         # Add new compilation
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
     return DefaultResponse(detail="Подборка добавлена")
@@ -177,7 +178,7 @@ async def toggle_recipe_like_view(
     """
     async with session.begin():
         # First we needs to get mapped user object from database
-        current_user = get_user_by_id(session=session, user_id=current_user.id, join_tables=[Users.liked_recipes])
+        current_user = await get_user_by_id(session=session, user_id=current_user.id, join_tables=[Users.liked_recipes])
         # Then we need to get recipe object
         recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)
         # Now if recipe is not liked, then we should add it to likes
