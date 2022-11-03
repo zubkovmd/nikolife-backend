@@ -1,9 +1,9 @@
 """Whole application configuration. Configuration uses pydantic BaseSettings.
 Check https://pydantic-docs.helpmanual.io/usage/settings/"""
 
-from typing import Literal
+from typing import Literal, Optional
 
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel, BaseSettings, validator
 
 
 class Database(BaseModel):
@@ -19,6 +19,22 @@ class Database(BaseModel):
     name: str
     """database name"""
 
+    @validator("host")
+    def cleanup_host(cls, host):
+        return host.replace("\n", "").replace("\r", "")
+
+    @validator("username")
+    def cleanup_username(cls, username):
+        return username.replace("\n", "").replace("\r", "")
+
+    @validator("password")
+    def cleanup_password(cls, password):
+        return password.replace("\n", "").replace("\r", "")
+
+    @validator("name")
+    def cleanup_name(cls, name):
+        return name.replace("\n", "").replace("\r", "")
+
 
 class S3Service(BaseModel):
     """S3 configuration module"""
@@ -31,23 +47,48 @@ class S3Service(BaseModel):
     bucket: str
     """s3 bucket"""
 
+    @validator("acckey")
+    def cleanup_access_key(cls, acckey):
+        return acckey.replace("\n", "").replace("\r", "")
+
+    @validator("seckey")
+    def cleanup_secret_key(cls, seckey):
+        return seckey.replace("\n", "").replace("\r", "")
+
+    @validator("endpoint")
+    def cleanup_endpoint(cls, endpoint):
+        return endpoint.replace("\n", "").replace("\r", "")
+
+    @validator("bucket")
+    def cleanup_bucket(cls, bucket):
+        return bucket.replace("\n", "").replace("\r", "")
+
 
 class Sentry(BaseModel):
     """Sentry configuration model"""
-    dsn: str
+    dsn: Optional[str] = None
     """sentry dsn"""
+
+    @validator("dsn")
+    def cleanup_dsn(cls, dsn):
+        if dsn:
+            return dsn.replace("\n", "").replace("\r", "")
 
 
 class ApiSettings(BaseModel):
     """api jwt secret key"""
     secret_key: str
 
+    @validator("secret_key")
+    def cleanup_secret_key(cls, secret_key):
+        return secret_key.replace("\n", "").replace("\r", "")
+
 
 class Settings(BaseSettings):
     """Base settings class"""
     database: Database
     s3: S3Service
-    sentry: Sentry
+    sentry: Optional[Sentry]
     api: ApiSettings
     environment: Literal['development', 'testing', 'production']
 
