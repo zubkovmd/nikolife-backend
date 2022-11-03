@@ -106,3 +106,5 @@ class Settings(BaseSettings):
         """
         Sets case insensitive for pydantic environment variables checker.
         """
+
+settings = Settings()

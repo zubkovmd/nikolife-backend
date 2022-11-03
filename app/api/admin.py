@@ -14,7 +14,7 @@ from starlette.requests import Request
 
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import authenticate_user, create_access_token
-from app.config import Settings
+from app.config import settings
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_GROUP_NAME
 from app.database.models.base import Users, Groups, IngredientsGroups, Recipes, Ingredients, RecipeDimensions, \
     RecipeIngredients, RecipeCategories, RecipeCompilations, Story, Articles
@@ -56,7 +56,7 @@ def create_admin(app: fastapi.FastAPI):
     admin = Admin(
             app,
             DatabaseManagerAsync.get_instance().get_engine(),
-            authentication_backend=MyBackend(secret_key=Settings().api.secret_key)
+            authentication_backend=MyBackend(secret_key=settings.api.secret_key)
     )
 
     class UsersPanel(ModelView, model=Users):

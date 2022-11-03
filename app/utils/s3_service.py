@@ -10,7 +10,7 @@ from PIL import ImageOps, Image
 from fastapi import UploadFile
 
 from app.api.routes.v1.utils.utility import convert_pillow_image_to_jpg_bytes
-from app.config import Settings
+from app.config import settings
 
 
 class S3Manager:
@@ -26,11 +26,11 @@ class S3Manager:
         logging.getLogger('botocore').setLevel(logging.CRITICAL)  # turns off botocore logging
         logging.getLogger('urllib3').setLevel(logging.CRITICAL)  # turns off urllib logging
         self.s3_client = boto3.client('s3',
-                                      aws_access_key_id=Settings().s3.acckey,
-                                      aws_secret_access_key=Settings().s3.seckey,
-                                      endpoint_url=Settings().s3.endpoint,
+                                      aws_access_key_id=settings.s3.acckey,
+                                      aws_secret_access_key=settings.s3.seckey,
+                                      endpoint_url=settings.s3.endpoint,
                                       )
-        self._bucket = Settings().s3.bucket
+        self._bucket = settings.s3.bucket
 
     @classmethod
     def get_instance(cls) -> 'S3Manager':

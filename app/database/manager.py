@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, AsyncSession
 
-from app.config import Settings
+from app.config import settings
 
 
 class _DatabaseManager:
@@ -38,11 +38,11 @@ class _DatabaseManager:
         Method initialize instance of _DatabaseManager. It's receives connection information from environment variables
         via ./app/config.py configuration.
         """
-        host = Settings().database.host
-        port = Settings().database.port
-        user = Settings().database.username
-        password = Settings().database.password
-        dbname = Settings().database.name
+        host = settings.database.host
+        port = settings.database.port
+        user = settings.database.username
+        password = settings.database.password
+        dbname = settings.database.name
         self._host = host
         self._port = port
         self._user = user

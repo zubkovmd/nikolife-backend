@@ -16,14 +16,14 @@ from starlette import status
 
 from app.api.routes.v1.utils.exceptions import CredentialsException
 from app.api.routes.v1.utils.service_models import UserModel
-from app.config import Settings
+from app.config import settings
 from app.constants import ADMIN_GROUP_NAME, DEFAULT_USER_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = Settings().api.secret_key
+SECRET_KEY = settings.api.secret_key
 ALGORITHM = "HS256"
 
 
