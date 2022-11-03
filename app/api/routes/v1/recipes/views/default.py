@@ -154,7 +154,7 @@ async def get_recipe_view(
     """
     async with session.begin():
         recipe = await get_recipe_by_id(recipe_id=recipe_id, session=session)
-        if len(set(group.name for group in current_user.groups).intersection(set(i.name for i in recipe.allowed_groups))) == 0:
+        if len(set(group for group in current_user.groups).intersection(set(i.name for i in recipe.allowed_groups))) == 0:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="У вас нет досутпа к этому рецепту")
         return RecipeResponseModel(**build_recipe_output(recipe=recipe, current_user=current_user))
 
