@@ -28,8 +28,8 @@ async def add_group(group_name: str, session: AsyncSession):
 
 async def remove_group(group_name: str, session: AsyncSession):
     """
-    Method deltes group: Groups with **group_name** from database. If group with this name is not exists, then service throws
-    409_CONFLICT exception.
+    Method deltes group: Groups with **group_name** from database. If group with this name is not exists,
+    then service throws 409_CONFLICT exception.
 
     :param group_name: group name to delete
     :param session: SQLAlchemy session object

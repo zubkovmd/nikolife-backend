@@ -43,8 +43,7 @@ class Loggers:
         """
                 Return default logger if exists, else first creates logger with this name
 
-                :param name: logger name
-                :return: named logger
+                :return: default logger
                 """
         DEFAULT_LOGGER_NAME = "DEFAULT"
         named_logger = list(filter(lambda x: x.name == DEFAULT_LOGGER_NAME, cls.loggers))

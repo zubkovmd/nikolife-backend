@@ -9,15 +9,15 @@ import fastapi
 from fastapi import HTTPException
 from sqladmin import Admin, ModelView
 from sqladmin.authentication import AuthenticationBackend
-from sqlalchemy import create_engine
 from starlette.requests import Request
 
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import authenticate_user, create_access_token
 from app.config import settings
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_GROUP_NAME
-from app.database.models.base import Users, Groups, IngredientsGroups, Recipes, Ingredients, RecipeDimensions, \
-    RecipeIngredients, RecipeCategories, RecipeCompilations, Story, Articles
+from app.database.models.base import (
+    Users, Groups, IngredientsGroups, Recipes, Ingredients, RecipeDimensions,
+    RecipeIngredients, RecipeCategories, RecipeCompilations, Story, Articles)
 from app.database import DatabaseManagerAsync
 
 
@@ -29,7 +29,7 @@ class MyBackend(AuthenticationBackend):
             form = await request.form()
             user = await authenticate_user(form["username"], form["password"])
             user = await get_user_by_id(user_id=user.id, session=session)
-            if not ADMIN_GROUP_NAME in [group.name for group in user.groups]:
+            if ADMIN_GROUP_NAME not in [group.name for group in user.groups]:
                 raise HTTPException(status_code=401, detail="Not admin")
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             access_token = create_access_token(
@@ -54,9 +54,9 @@ class MyBackend(AuthenticationBackend):
 def create_admin(app: fastapi.FastAPI):
     """Method initializes admin panel."""
     admin = Admin(
-            app,
-            DatabaseManagerAsync.get_instance().get_engine(),
-            authentication_backend=MyBackend(secret_key=settings.api.secret_key)
+        app,
+        DatabaseManagerAsync.get_instance().get_engine(),
+        authentication_backend=MyBackend(secret_key=settings.api.secret_key)
     )
 
     class UsersPanel(ModelView, model=Users):
@@ -100,7 +100,10 @@ def create_admin(app: fastapi.FastAPI):
         """Recipe ingredients panel"""
         name = "Связь Рецепт-ингредиент"
         name_plural = "Связи Рецепт-ингредиент"
-        column_list = [RecipeIngredients.id, RecipeIngredients.recipe_id, RecipeIngredients.dimension, RecipeIngredients.ingredient]
+        column_list = [
+            RecipeIngredients.id, RecipeIngredients.recipe_id,
+            RecipeIngredients.dimension, RecipeIngredients.ingredient
+        ]
 
     class RecipeCategoriesPanel(ModelView, model=RecipeCategories):
         """Recipe categories panel"""
@@ -125,8 +128,6 @@ def create_admin(app: fastapi.FastAPI):
         name = "Новость"
         name_plural = "Новости"
         column_list = [Articles.id, Articles.title]
-
-
 
     admin.add_view(UsersPanel)
     admin.add_view(GroupsPanel)

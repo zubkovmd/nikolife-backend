@@ -7,6 +7,7 @@ from app.database.manager import DatabaseManagerAsync
 
 from app.log import Loggers
 
+
 async def create_superuser() -> None:
     """
     Method creates superuser (admin) for development.
@@ -17,7 +18,7 @@ async def create_superuser() -> None:
     logger.info("Creating superuser")
     async with DatabaseManagerAsync.get_instance().get_session() as session:
         user_is_already_created = (
-            await session.execute(sqlalchemy.select(Users).where(Users.username==DEV_SUPERUSER_LOGIN))
+            await session.execute(sqlalchemy.select(Users).where(Users.username == DEV_SUPERUSER_LOGIN))
         ).scalars().first()
         if user_is_already_created:
             logger.info("Superuser already created")

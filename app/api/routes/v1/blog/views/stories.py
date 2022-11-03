@@ -8,8 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetStoriesResponseModel
 from app.api.routes.v1.blog.utils import get_last_stories
-from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import check_is_user_admin
 from app.api.routes.v1.utils.utility import get_raw_filename
 from app.constants import MAX_STORIES_COUNT
 from app.database.models.base import Story, StoryItem
@@ -31,7 +29,10 @@ async def get_stories_view(session: AsyncSession):
                 {
                     "title": story.title,
                     "thumbnail": S3Manager.get_instance().get_url(f"{story.thumbnail}_small.jpg"),
-                    "images": [S3Manager.get_instance().get_url(f"{story_item.image}_big.jpg") for story_item in story.story_items]
+                    "images": [
+                        S3Manager.get_instance().get_url(f"{story_item.image}_big.jpg")
+                        for story_item in story.story_items
+                    ]
                 }
                 for story
                 in stories]

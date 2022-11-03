@@ -10,14 +10,13 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import joinedload
 from starlette import status
 
 from app.api.routes.v1.utils.exceptions import CredentialsException
 from app.api.routes.v1.utils.service_models import UserModel
 from app.config import settings
-from app.constants import ADMIN_GROUP_NAME, DEFAULT_USER_GROUP_NAME
+from app.constants import ADMIN_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from passlib.context import CryptContext
@@ -82,7 +81,7 @@ async def get_user(username: str) -> UserModel:
             raise CredentialsException()
 
 
-async def authenticate_user(username: str, password: str) -> Users:
+async def authenticate_user(username: str, password: str) -> UserModel:
     """
     Function that authenticates user by username and hashed password.
     Raises **CredentialsException** if credentials is not valid.
@@ -91,7 +90,7 @@ async def authenticate_user(username: str, password: str) -> Users:
     :param password: password
     :return: User instance
     """
-    user: Users = await get_user(username)
+    user: UserModel = await get_user(username)
     verify_password(password, user.password)  # verify that password is match for that user
     return user
 

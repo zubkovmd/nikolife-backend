@@ -9,8 +9,7 @@ from app.api.routes.v1.groups.views import add_group_view, remove_group_view, ch
     add_user_to_group_view, remove_user_from_group_view
 from app.api.routes.v1.users.models import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
-from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
-from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.auth import get_admin_by_token
 from app.database import DatabaseManagerAsync
 
 router = APIRouter(prefix="/groups")

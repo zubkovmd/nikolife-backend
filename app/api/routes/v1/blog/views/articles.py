@@ -1,7 +1,7 @@
 """Article routes views"""
 
 import sqlalchemy
-from fastapi import Form, UploadFile, Depends
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -9,12 +9,8 @@ from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.utility import get_raw_filename
-from app.constants import MAX_ARTICLES_COUNT
 from app.database.models.base import Users, Articles
 from app.utils import S3Manager
-from PIL import Image, ImageOps
-import locale
-# locale.setlocale(locale.LC_TIME, 'ru_RU.UTF-8')
 
 
 async def get_articles_view(
@@ -29,12 +25,13 @@ async def get_articles_view(
     :return: Article model
     """
     async with session.begin():
-        articles = (await session.execute(
-            sqlalchemy.select(Articles)
+        articles = (
+            await session.execute(
+                sqlalchemy.select(Articles)
                 .order_by(Articles.id.desc())
                 .limit(articles_count)
-                .options(selectinload(Articles.user))
-        )).scalars().all()
+                .options(selectinload(Articles.user)))
+        ).scalars().all()
         return GetArticlesResponseModel(
             articles=[
                 {

@@ -2,16 +2,17 @@
 Recipes router module. Contains all routes that interact with recipes.
 """
 
-from typing import List, Dict, Optional, Union
+from typing import List, Optional, Union
 
-from fastapi import Depends, Response, UploadFile, Form, File, APIRouter, Body, Query
+from fastapi import Depends, UploadFile, Form, File, APIRouter, Body, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse, DefaultResponseWithPayload
-from app.api.routes.v1.recipes.utility_classes import GetRecipesResponseModel, RecipeResponseModel, \
-    RecipeCategoriesResponseModel, RecipeLikesRequestModel, GetRecipesRequestModel, FindResponseModel, FindRequestModel, \
-    RecipeCompilationResponseModel, RecipeCompilationsResponseModel, CreateCompilationRequestModel, \
-    GetIngredientsResponseModel, GetDimensionsResponseModel, GetIngredientGroupsResponseModel
+from app.api.routes.v1.recipes.utility_classes import (
+    GetRecipesResponseModel, RecipeResponseModel, RecipeCategoriesResponseModel,
+    RecipeLikesRequestModel, FindResponseModel, RecipeCompilationsResponseModel,
+    CreateCompilationRequestModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
+    GetIngredientGroupsResponseModel)
 from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe_view, delete_recipe_view, \
     create_recipe_view, update_recipe_view, get_liked_recipes_view, get_recipes_by_ingredient_view, \
     get_recipes_by_category_view
@@ -19,11 +20,9 @@ from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe
 from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view, get_ingredients_view, \
     get_dimensions_view, get_ingredients_groups_view, toggle_recipe_like_view, \
     find_all_view, get_recipes_compilations_view, create_recipes_compilation_view
-from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token, get_admin_by_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
-
-from app.database.models.base import Users
 
 router = APIRouter(prefix="/recipes")
 
@@ -337,7 +336,11 @@ async def get_recipes_by_ingredient(
     :param current_user: User information object.
     :return: Found recipes.
     """
-    return await get_recipes_by_ingredient_view(ingredient_name=ingredient_name, session=session, current_user=current_user)
+    return await get_recipes_by_ingredient_view(
+        ingredient_name=ingredient_name,
+        session=session,
+        current_user=current_user
+    )
 
 
 @router.get("/get_recipes_by_category", response_model=GetRecipesResponseModel)

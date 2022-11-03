@@ -1,12 +1,12 @@
 """Utility methods for user routes"""
 
-from typing import List, Optional
+from typing import Optional
 
 import requests
 import sqlalchemy
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from app.api.routes.v1.users.models import GoogleResponseModel
@@ -25,8 +25,8 @@ async def get_user_by_id(user_id: int, session: AsyncSession, join_tables: Optio
     """
     stmt = (
         sqlalchemy.select(Users)
-            .filter(Users.id == user_id)
-            .limit(1)
+        .filter(Users.id == user_id)
+        .limit(1)
     )
     if join_tables is not None:
         stmt = stmt.options(selectinload(*join_tables))
@@ -49,8 +49,8 @@ async def get_user_by_username(session, username, join_tables: Optional[list] = 
     """
     stmt = (
         sqlalchemy.select(Users)
-            .where(Users.username == username)
-            .limit(1)
+        .where(Users.username == username)
+        .limit(1)
     )
     if join_tables is not None:
         stmt = stmt.options(selectinload(*join_tables))

@@ -1,5 +1,4 @@
 """Utils for recipe views"""
-from datetime import datetime
 from typing import List, Optional
 
 import sqlalchemy
@@ -7,17 +6,29 @@ from fastapi import HTTPException, UploadFile
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload, lazyload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import get_raw_filename
 from app.constants import ADMIN_GROUP_NAME
 from app.utils import S3Manager
-from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel, CreateRecipeStepRequestModel, \
-    RecipeIngredientResponseModel, GetRecipesRecipeResponseModel
-from app.database.models.base import Ingredients, IngredientsGroups, RecipeDimensions, RecipeIngredients, Recipes, \
-    RecipeCategories, RecipeSteps, Users, Groups, RecipeCompilations
+from app.api.routes.v1.recipes.utility_classes import (
+    CreateRecipeIngredientRequestModel,
+    CreateRecipeStepRequestModel,
+    RecipeIngredientResponseModel,
+    GetRecipesRecipeResponseModel)
+from app.database.models.base import (
+    Ingredients,
+    IngredientsGroups,
+    RecipeDimensions,
+    RecipeIngredients,
+    Recipes,
+    RecipeCategories,
+    RecipeSteps,
+    Users,
+    Groups,
+    RecipeCompilations)
 
 
 async def get_ingredient_group_or_create_if_not_exists(name: str, session) -> IngredientsGroups:
@@ -231,15 +242,15 @@ async def get_recipe_by_id(recipe_id: int, session: AsyncSession) -> Recipes:
     Method search recipe by passed id. If recipe not found, then it throws
     404_NOT_FOUND exception
 
-    :param recipe_id: Id of recipe.
+    :param recipe_id: id of recipe.
     :param session: SQLAlchemy AsyncSession object.
     :return: Found recipe.
     """
     stmt = (
         sqlalchemy.select(Recipes)
-            .where(Recipes.id == recipe_id)
-            .limit(1)
-            .options(selectinload("*"),)
+        .where(Recipes.id == recipe_id)
+        .limit(1)
+        .options(selectinload("*"),)
     )
     resp = await session.execute(stmt)
     recipe: Recipes = resp.scalars().first()
@@ -288,11 +299,9 @@ async def select_recipes_and_filter_them(
     # First make base query
     stmt = (
         select(Recipes)
-            .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
-            .filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
-            .options(selectinload(
-            '*'
-        ), )
+        .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
+        .filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
+        .options(selectinload('*'))
     )
     # If include_categories passed, then filter recipes where categories intersect at least with one of these
     if include_categories:
@@ -321,7 +330,7 @@ async def select_recipes_and_filter_them(
 
 def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipesRecipeResponseModel]:
     """
-    Method build list of recipes to required output format. Adds links to images and liked fields.
+    Method build list of recipes to output format. Add links to images and liked fields.
     Description: recipe 'liked' if user who request this recipe is liked it.
 
     :param recipes: List of recipes.
@@ -354,11 +363,9 @@ async def select_liked_recipes(
     """
     stmt = (
         select(Recipes)
-            .where(Recipes.user_id == 1, Recipes.image.isnot(None))  # some recipes do not have images, so filter them
-            .filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in current_user.groups])))
-            .options(selectinload(
-            '*'
-        ), )
+        .where(Recipes.user_id == 1, Recipes.image.isnot(None))  # some recipes do not have images, so filter them
+        .filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in current_user.groups])))
+        .options(selectinload('*'))
     )
     stmt = stmt.filter(Recipes.liked_by.any(Users.id.in_([current_user.id])))
     response = await session.execute(stmt)
@@ -368,7 +375,7 @@ async def select_liked_recipes(
 
 def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
     """
-    Method build recipe to required output format. Adds links to images and liked fields.
+    Method build recipe to output format. Add links to images and liked fields.
     Description: recipe 'liked' if user who request this recipe is liked it.
 
     :param recipe: recipe.
@@ -466,7 +473,7 @@ async def update_recipe(
     :param current_user: User information object.
     :return: None
     """
-    await check_is_user_allow_to_modify_recipe(recipe= recipe, current_user=current_user)
+    await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user)
     if title:
         recipe.title = title
     if image:
@@ -480,9 +487,9 @@ async def update_recipe(
     if servings:
         recipe.servings = servings
     if ingredients:
-        ingredients: List[CreateRecipeIngredientRequestModel] = parse_ingredients_to_pydantic_models(
+        ingredients_parsed: List[CreateRecipeIngredientRequestModel] = parse_ingredients_to_pydantic_models(
             ingredients=ingredients)
-        await create_or_update_recipe_ingredients(new_ingredients=ingredients, recipe=recipe, session=session)
+        await create_or_update_recipe_ingredients(new_ingredients=ingredients_parsed, recipe=recipe, session=session)
 
     if steps:
         steps: List[CreateRecipeStepRequestModel] = parse_steps_to_pydantic_models(steps=steps)
@@ -491,7 +498,6 @@ async def update_recipe(
     if categories:
         categories = parse_categories_to_list(categories)
         await update_recipe_categories(new_categories=categories, recipe=recipe, session=session)
-
 
 
 async def get_category_image(category: str, session: AsyncSession) -> Optional[str]:
@@ -504,9 +510,9 @@ async def get_category_image(category: str, session: AsyncSession) -> Optional[s
     """
     stmt = (
         sqlalchemy.select(RecipeCategories)
-            .where(RecipeCategories.name == category)
-            .limit(1)
-            .options(selectinload("*"),)
+        .where(RecipeCategories.name == category)
+        .limit(1)
+        .options(selectinload("*"))
     )
     resp = await session.execute(stmt)
     category: RecipeCategories = resp.scalars().first()

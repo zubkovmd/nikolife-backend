@@ -1,17 +1,18 @@
 """Views for user groups router"""
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.groups.utils import add_group, remove_group, \
-    change_group_name, get_group_model_or_create_if_not_exists
+from app.api.routes.v1.groups.utils import (
+    add_group,
+    remove_group,
+    change_group_name,
+    get_group_model_or_create_if_not_exists)
 from app.api.routes.v1.users.models import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import check_is_user_admin, get_user_by_token, check_user_is_in_group
-from app.api.routes.v1.utils.service_models import UserModel
-from app.database import DatabaseManagerAsync
+from app.api.routes.v1.utils.auth import check_user_is_in_group
 from app.database.models.base import Users
 
 
@@ -82,8 +83,8 @@ async def add_user_to_group_view(
         user: Users = await get_user_by_id(user_id=group_model.user_id, session=session, join_tables=[Users.groups])
         try:
             # check if user already in this group, then throws 409_CONFLICT exception.
-            await check_user_is_in_group(group_name=group_model.group_name, user=user)  # this method throws 401
-                                                                                        # when user not in group
+            # this method throws 401 when user not in group
+            await check_user_is_in_group(group_name=group_model.group_name, user=user)
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                                 detail=f"Пользователь уже состоит в группе {group_model.group_name}")
         except HTTPException as e:

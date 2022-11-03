@@ -5,27 +5,31 @@ Utility views for recipe routes
 from typing import List
 
 import sqlalchemy
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.recipes.utility_classes import RecipeLikesRequestModel, FindResponseModel, \
-    RecipeFindResponseModel, IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel, \
-    RecipeCategoriesResponseModel, RecipeCategoryResponseModel, RecipeCompilationsResponseModel, \
-    RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel, \
-    GetIngredientGroupsResponseModel
+from app.api.routes.v1.recipes.utility_classes import (
+    RecipeLikesRequestModel, FindResponseModel, RecipeFindResponseModel,
+    IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel,
+    RecipeCategoriesResponseModel, RecipeCategoryResponseModel, RecipeCompilationsResponseModel,
+    RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
+    GetIngredientGroupsResponseModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
-from app.api.routes.v1.users.utils import get_user_by_username, get_user_by_id
+from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import get_raw_filename
 from app.database import DatabaseManagerAsync
-from app.database.models.base import RecipeCategories, Ingredients, RecipeDimensions, IngredientsGroups, Users, Recipes, \
-    RecipeCompilations
+from app.database.models.base import (
+    RecipeCategories,
+    Ingredients,
+    RecipeDimensions,
+    IngredientsGroups,
+    Users,
+    Recipes,
+    RecipeCompilations)
 from app.utils import S3Manager
 
 

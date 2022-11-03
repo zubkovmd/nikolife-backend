@@ -1,7 +1,6 @@
 import io
 
 from PIL.Image import Image
-from fastapi import UploadFile
 
 
 def get_raw_filename(filename: str) -> str:
@@ -26,4 +25,3 @@ def convert_pillow_image_to_jpg_bytes(image: Image) -> bytes:
     imag_byte_arr = io.BytesIO()
     image.convert("RGB").save(imag_byte_arr, format='jpeg')
     return imag_byte_arr.getvalue()
-

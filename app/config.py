@@ -98,7 +98,7 @@ class Settings(BaseSettings):
         """
         environment variable delimiter
         Description: you should pass environment variables for settings with this delimiter. For example:
-        you need to fill database host. So you write a host address to environment variable 
+        you need to fill database host. So you write a host address to environment variable
         with name DATABASE__HOST. '__' there is combine settings module Database with settings parameter Host.
         Check https://pydantic-docs.helpmanual.io/usage/settings/ for more info.
         """
@@ -106,5 +106,6 @@ class Settings(BaseSettings):
         """
         Sets case insensitive for pydantic environment variables checker.
         """
+
 
 settings = Settings()

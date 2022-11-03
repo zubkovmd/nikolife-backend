@@ -1,2 +1,4 @@
 black
 docstr-coverage
+flake8
+mypy

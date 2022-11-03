@@ -135,7 +135,11 @@ async def delete_user_view(
     """
     user_to_delete = current_user
     async with session.begin():
-        user: Users = await get_user_by_username(session=session, username=user_to_delete.username, join_tables=[Users.created_recipes])
+        user: Users = await get_user_by_username(
+            session=session,
+            username=user_to_delete.username,
+            join_tables=[Users.created_recipes]
+        )
         for recipe in user.created_recipes:
             await session.delete(recipe)
         await session.delete(user)

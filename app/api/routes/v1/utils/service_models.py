@@ -18,4 +18,3 @@ class UserModel(BaseModel):
     info: str
     image: Optional[str]
     groups: list[str]
-

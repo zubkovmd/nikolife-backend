@@ -8,8 +8,8 @@ from sqlalchemy.orm import declarative_base, relationship
 Base = declarative_base()
 
 """
-    Association table for MANY-TO-MANY Users-Groups models. 
-    Implement user grouping like 'admin', 'user', etc.. 
+    Association table for MANY-TO-MANY Users-Groups models.
+    Implement user grouping like 'admin', 'user', etc..
 """
 association_users_groups = Table(
     "assoc_users_groups",
@@ -19,7 +19,7 @@ association_users_groups = Table(
 )
 
 """
-    Association table for MANY-TO-MANY Recipes-RecipeCategories models. 
+    Association table for MANY-TO-MANY Recipes-RecipeCategories models.
     Implement recipe categories like 'breakfast', 'lunch', etc...
 """
 association_recipes_categories = Table(
@@ -31,7 +31,7 @@ association_recipes_categories = Table(
 
 """
     Association table for MANY-TO-MANY Recipes-Groups models.
-    Implement accessing to recipe for users with specific groups. Default 'user' have access to one 
+    Implement accessing to recipe for users with specific groups. Default 'user' have access to one
     list of recipes, 'approved_user' to other...
 """
 association_recipes_groups = Table(
@@ -43,8 +43,8 @@ association_recipes_groups = Table(
 
 """
     Association table for MANY-TO-MANY Recipes-RecipesCompilations models.
-    Implement compilations of recipes. Admins can group recipes, then name it, add image and 
-    it's called compilation of recipes.   
+    Implement compilations of recipes. Admins can group recipes, then name it, add image and
+    it's called compilation of recipes.
 """
 association_recipes_compilations = Table(
     "assoc_recipes_compilations",
@@ -300,7 +300,7 @@ class RecipeIngredients(Base):
                                             ingredient=carrot_ingredient,
                                             dimension=grams_dimension,
                                             value=35)
-        Now we can add this ingredients to recipe:
+        Now we can add these ingredients to recipe:
         RECIPE_INSTANCE.ingredients=[apple_recipe_ingredient, carrot_recipe_ingredient]
     """
 
@@ -315,10 +315,10 @@ class RecipeIngredients(Base):
     value = Column(Float, nullable=False)
     """
     recipe value for dimenshion.
-    
+
     Description: Ingredients added to a recipe may vary in weight/volume even within the same ingredient.
     This model is used to associate an ingredient for a specific recipe with its weight/volume.
-    
+
     Example:carrot 14 g, there carrot is ingredient, g is dimension and 14 is value
     """
     dimension_id = Column(Integer, ForeignKey("recipe_dimensions.id"), nullable=False)
@@ -495,8 +495,8 @@ class Articles(Base):
     """
     Article model
 
-    Description: In this service admin can create an articles with news, helpful tips, etc. 
-    
+    Description: In this service admin can create an articles with news, helpful tips, etc.
+
     Example:
         creating a new article:
         new_article = Articles(
@@ -506,10 +506,10 @@ class Articles(Base):
             user=USER_THAT_CREATES_ARTICLE(:Users)
             text="My new article text or information"
         )
-    """
+"""
 
     __tablename__ = "article"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     """article id (primary key, autogenerate)"""
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=text("now()"))
@@ -579,7 +579,11 @@ class Recipes(Base):
     """RecipeCategories model links"""
     ingredients = relationship("RecipeIngredients", cascade="all, delete")
     """RecipeIngredients model links"""
-    compilations = relationship("RecipeCompilations", secondary=association_recipes_compilations, back_populates="recipes")
+    compilations = relationship(
+        "RecipeCompilations",
+        secondary=association_recipes_compilations,
+        back_populates="recipes"
+    )
     """RecipeCompilations model links"""
     allowed_groups = relationship("Groups", secondary=association_recipes_groups)
     """Groups model links"""

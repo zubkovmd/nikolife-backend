@@ -2,23 +2,19 @@
 Blog router module. Contains all routes that interact with user.
 """
 
-from typing import List, Union
+from typing import List
 
-from fastapi import Depends, APIRouter, Query, Form, UploadFile
+from fastapi import Depends, APIRouter, Form, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse
-from app.api.routes.v1.blog.models import GetStoriesResponseModel, PutStoriesResponseModel, \
-    GetArticlesResponseModel
+from app.api.routes.v1.blog.models import GetStoriesResponseModel, GetArticlesResponseModel
 from app.api.routes.v1.blog.views.articles import put_article_view, get_articles_view
 from app.api.routes.v1.blog.views.stories import get_stories_view, put_story_view
-from app.api.routes.v1.recipes.utility_classes import GetRecipesResponseModel
-from app.api.routes.v1.recipes.views.default import get_recipes_view
-from app.api.routes.v1.utils.auth import get_user_by_token, check_is_user_admin, get_admin_by_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.constants import MAX_ARTICLES_COUNT
 from app.database import DatabaseManagerAsync
-from app.database.models.base import Users
 
 router = APIRouter(prefix="/blog")
 
@@ -46,7 +42,7 @@ async def put_story(
         current_user: UserModel = Depends(get_admin_by_token),
 ):
     """
-     New story adding
+    New story adding
 
     :param title: Story title.
     :param thumbnail: Story thumbnail.

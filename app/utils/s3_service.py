@@ -16,7 +16,7 @@ from app.config import settings
 class S3Manager:
     """
     Manager for AWS S3 compatible services (i use https://min.io).
-    Can send files (from drive or memory) and generate links on this files by key.
+    Can send files (from drive or memory) and generate links on these files by key.
     """
     _bucket: str
     _instance = None
@@ -106,5 +106,11 @@ class S3Manager:
         :param object_key: key of object.
         :return: link to object.
         """
-        return self.s3_client.generate_presigned_url('get_object', Params={'Bucket': self._bucket, 'Key': object_key}, ExpiresIn=700000)
-
+        return self.s3_client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': self._bucket,
+                'Key': object_key
+            },
+            ExpiresIn=700000
+        )
