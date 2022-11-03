@@ -10,7 +10,7 @@ logging.basicConfig(
 )
 
 
-class Logger:
+class _Logger:
     """Default logger class"""
     def __init__(self, name: str):
         """Logger instance initializer"""
@@ -20,10 +20,10 @@ class Logger:
 
 class Loggers:
     """Named loggers container"""
-    loggers: List[Logger] = []
+    loggers: List[_Logger] = []
 
     @classmethod
-    def get_logger(cls, name) -> Logger:
+    def get_named_logger(cls, name) -> logging.Logger:
         """
         Return named logger if exists, else first creates logger with this name
 
@@ -34,9 +34,26 @@ class Loggers:
         if named_logger:
             return named_logger[0].logger
         else:
-            new_logger = Logger(name)
-            cls.loggers.append(Logger(name))
+            new_logger = _Logger(name)
+            cls.loggers.append(_Logger(name))
+            return new_logger.logger
+
+    @classmethod
+    def get_default_logger(cls):
+        """
+                Return default logger if exists, else first creates logger with this name
+
+                :param name: logger name
+                :return: named logger
+                """
+        DEFAULT_LOGGER_NAME = "DEFAULT"
+        named_logger = list(filter(lambda x: x.name == DEFAULT_LOGGER_NAME, cls.loggers))
+        if named_logger:
+            return named_logger[0].logger
+        else:
+            new_logger = _Logger(DEFAULT_LOGGER_NAME)
+            cls.loggers.append(_Logger(DEFAULT_LOGGER_NAME))
             return new_logger.logger
 
 
-default_logger = Loggers.get_logger("SERVER_MESSAGE")
+default_logger = Loggers.get_named_logger("SERVER_MESSAGE")
