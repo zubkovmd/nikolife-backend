@@ -17,6 +17,7 @@ from app.api.routes.v1.recipes.utils import parse_ingredients_to_pydantic_models
     update_recipe_steps, update_recipe_categories, parse_categories_to_list, \
     get_recipe_by_id, select_recipes_and_filter_them, build_recipes_output, select_liked_recipes, build_recipe_output, \
     check_is_user_allow_to_modify_recipe, create_new_recipe, update_recipe
+from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.constants import ADMIN_GROUP_NAME
@@ -61,6 +62,7 @@ async def get_recipes_view(
         if not recipes:
             return GetRecipesResponseModel(recipes=[])
         # now for each recipe we should make image link and add 'liked' field (it's liked by request user)
+        current_user: Users = await get_user_by_id(user_id=current_user.id, session=session)
         return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
@@ -86,6 +88,7 @@ async def get_recipes_by_ingredient_view(
     if not recipes:
         return GetRecipesResponseModel(recipes=[])
     # now for each recipe we should make image link and add 'liked' field (it's liked by request user)
+    current_user: Users = await get_user_by_id(user_id=current_user.id, session=session)
     return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
@@ -111,6 +114,7 @@ async def get_recipes_by_category_view(
     if not recipes:
         return GetRecipesResponseModel(recipes=[])
     # now for each recipe we should make image link and add 'liked' field (it's liked by request user)
+    current_user: Users = await get_user_by_id(user_id=current_user.id, session=session)
     return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
@@ -129,6 +133,7 @@ async def get_liked_recipes_view(
         recipes = await select_liked_recipes(session, current_user)
         if not recipes:
             return GetRecipesResponseModel(recipes=[])
+        current_user: Users = await get_user_by_id(user_id=current_user.id, session=session)
         return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
