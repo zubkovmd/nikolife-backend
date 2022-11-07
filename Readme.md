@@ -1,5 +1,7 @@
 # Backend API application for flutter-based mobile app
 
+## Product architecture
+![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/product_architecture.jpeg)
 ## Demo
 ![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/app_demo.gif)
 
