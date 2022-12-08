@@ -15,7 +15,7 @@
          3) `DATABASE__USERNAME - databse username (db_user)`
          4) `DATABASE__PASSWORD - databse password for username (db_user_pass)`
          5) `DATABASE__NAME - database name (db_name)`
-      2) #### S3 (aws S3 api compatible cloud storage. I use min.io)
+      2) #### S3 (AWS S3 API compatible cloud storage. I use min.io)
          1) `S3__HOST -  host (127.0.0.1)`
          2) `S3__ACCKEY - storage access key`
          3) `S3__SECKEY - storage secret key`
@@ -34,5 +34,5 @@
    2) run container with environment file and do 8000-to-80 port forward: `docker run --rm -p 8000:80 --network nikolife-backend --env-file dev_containered.env NAME_OF_CONTAINER`
 
 ## Testing
-You can test api with a postman. All requests were exported with collection file. You can find it in `./readme_files/nikolife.postman_collection.json`.
+You can test API with a postman. All requests were exported with the collection file. You can find it in `./readme_files/nikolife.postman_collection.json`.
 [Here is instruction how to import data to postman.](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/#importing-data-into-postman)
