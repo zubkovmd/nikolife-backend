@@ -392,7 +392,7 @@ def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
     recipe_response["categories"] = [i.name for i in recipe_response["categories"]]
     recipe_response["image"] = None if recipe_response["image"] is None else S3Manager.get_instance().get_url(
         f"{recipe_response['image']}_med.jpg")
-    recipe_response["liked"] = current_user in recipe.liked_by
+    recipe_response["liked"] = current_user.username in [user.username for user in recipe.liked_by]
     return recipe_response
 
 
