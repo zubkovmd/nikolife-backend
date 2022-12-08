@@ -11,6 +11,7 @@ from fastapi import UploadFile
 
 from app.api.routes.v1.utils.utility import convert_pillow_image_to_jpg_bytes
 from app.config import settings
+from app.constants import BACKEND_HOST, S3_BUCKET, S3_PORT
 
 
 class S3Manager:
@@ -106,11 +107,20 @@ class S3Manager:
         :param object_key: key of object.
         :return: link to object.
         """
-        return self.s3_client.generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': self._bucket,
-                'Key': object_key
-            },
-            ExpiresIn=700000
-        )
+        return f"http://{BACKEND_HOST}:{S3_PORT}/{S3_BUCKET}/{object_key.replace(' ', '%20')}"
+
+    # def get_url(self, object_key) -> str:
+    #     """
+    #     Method creates link to s3 object and returns it
+    #
+    #     :param object_key: key of object.
+    #     :return: link to object.
+    #     """
+    #     return self.s3_client.generate_presigned_url(
+    #         'get_object',
+    #         Params={
+    #             'Bucket': self._bucket,
+    #             'Key': object_key
+    #         },
+    #         ExpiresIn=700000
+    #     )
