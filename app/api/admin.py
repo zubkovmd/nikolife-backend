@@ -28,7 +28,7 @@ class MyBackend(AuthenticationBackend):
         async with DatabaseManagerAsync.get_instance().get_session() as session:
             form = await request.form()
             user = await authenticate_user(form["username"], form["password"])
-            user = await get_user_by_id(user_id=user.id, session=session)
+            user = await get_user_by_id(user_id=user.id, session=session, join_tables=["groups"])
             if ADMIN_GROUP_NAME not in [group.name for group in user.groups]:
                 raise HTTPException(status_code=401, detail="Not admin")
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
