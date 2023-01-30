@@ -2,6 +2,7 @@ FROM python:3.10
 
 WORKDIR /proj
 COPY requirements.txt /proj/
+RUN python -m pip install setuptools==57.5.0
 RUN python -m pip install -r requirements.txt
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get -y install locales
