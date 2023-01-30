@@ -214,7 +214,7 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
         return [resp]
     else:
         search_by_semi_compare = sqlalchemy.select(model).filter(
-            func.lower(field).contains(string_to_find.lower())).limit(max_returns)
+            func.lower(field).like(f"{string_to_find.lower()}%")).limit(max_returns)
         resp = await session.execute(search_by_semi_compare)
         resp = resp.scalars().all()
         if resp:
