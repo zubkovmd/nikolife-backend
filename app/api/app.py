@@ -27,6 +27,12 @@ if settings.sentry:
     )
 
 app = fastapi.FastAPI()
+@app.on_event("startup")
+async def startup():
+    """startup methods for FastAPI application"""
+    Instrumentator().instrument(app).expose(app)
+    if settings.environment == "development":
+        await create_superuser()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,10 +43,3 @@ app.add_middleware(
 app.include_router(router)
 create_admin(app)
 
-
-@app.on_event("startup")
-async def startup():
-    """startup methods for FastAPI application"""
-    Instrumentator().instrument(app).expose(app)
-    if settings.environment == "development":
-        await create_superuser()
