@@ -116,6 +116,7 @@ class RecipeIngredientResponseModel(BaseModel):
     name: str
     value: float
     dimension: str
+    groups: List[str]
 
 
 class RecipeResponseModel(BaseModel):
@@ -168,6 +169,16 @@ class GetRecipesResponseModel(BaseModel):
 class GetIngredientsResponseModel(BaseModel):
     """Model for listed available ingredients response"""
     ingredients: List[str]
+
+
+class IngredientWithGroupResponseModel(BaseModel):
+    name: str
+    groups: List[str]
+
+
+class GetIngredientsWithGroupsResponseModel(BaseModel):
+    """Model for listed available ingredients response"""
+    ingredients: List[IngredientWithGroupResponseModel]
 
 
 class GetDimensionsResponseModel(BaseModel):

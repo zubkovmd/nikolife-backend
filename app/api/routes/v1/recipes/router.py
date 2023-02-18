@@ -12,14 +12,14 @@ from app.api.routes.v1.recipes.utility_classes import (
     GetRecipesResponseModel, RecipeResponseModel, RecipeCategoriesResponseModel,
     RecipeLikesRequestModel, FindResponseModel, RecipeCompilationsResponseModel,
     CreateCompilationRequestModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
-    GetIngredientGroupsResponseModel)
+    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel)
 from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe_view, delete_recipe_view, \
     create_recipe_view, update_recipe_view, get_liked_recipes_view, get_recipes_by_ingredient_view, \
     get_recipes_by_category_view
 
 from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view, get_ingredients_view, \
     get_dimensions_view, get_ingredients_groups_view, toggle_recipe_like_view, \
-    find_all_view, get_recipes_compilations_view, create_recipes_compilation_view
+    find_all_view, get_recipes_compilations_view, create_recipes_compilation_view, get_ingredients_with_groups_view
 from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
@@ -89,9 +89,9 @@ async def get_recipe(
     return await get_recipe_view(recipe_id=recipe_id, session=session, current_user=current_user)
 
 
-@router.delete("/", response_model=DefaultResponse)
+@router.delete("/{recipe_id}", response_model=DefaultResponse)
 async def delete_recipe(
-        recipe_id: int = Body(..., embed=True),
+        recipe_id: int,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: UserModel = Depends(get_user_by_token),
 ):
@@ -274,6 +274,20 @@ async def get_ingredients(
     :return: Response with list of ingredients.
     """
     return await get_ingredients_view(session)
+
+
+@router.get("/utils/get_available_ingredients_with_groups", response_model=GetIngredientsWithGroupsResponseModel)
+async def get_ingredients_with_groups(
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+):
+    """
+    Route will return names of all ingredients registered in this service.Check
+    app.database.models.base -> RecipeIngredients for additional info.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with list of ingredients.
+    """
+    return await get_ingredients_with_groups_view(session)
 
 
 @router.get("/utils/get_available_dimensions", response_model=GetDimensionsResponseModel)

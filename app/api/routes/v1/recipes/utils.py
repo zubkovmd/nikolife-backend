@@ -9,9 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import get_raw_filename
-from app.constants import ADMIN_GROUP_NAME
+from app.constants import ADMIN_GROUP_NAME, DEFAULT_USER_GROUP_NAME
 from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import (
     CreateRecipeIngredientRequestModel,
@@ -270,9 +271,9 @@ async def check_is_user_allow_to_modify_recipe(recipe: Recipes, current_user: Us
     :return: None
     """
     recipe_created_by_this_user = recipe.user.id == current_user.id
-    user_is_admin = ADMIN_GROUP_NAME in recipe.user.groups
+    user_is_admin = ADMIN_GROUP_NAME in [group.name for group in recipe.user.groups]
     # if user is not admin and try to delete recipe that was added by other user, then we should throw 401
-    if not recipe_created_by_this_user or not user_is_admin:
+    if not recipe_created_by_this_user and not user_is_admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="У вас нет прав на удаление рецепта")
 
 
@@ -300,9 +301,10 @@ async def select_recipes_and_filter_them(
     stmt = (
         select(Recipes)
         .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
-        .filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
         .options(selectinload('*'))
     )
+    if not ADMIN_GROUP_NAME in user_groups:
+        stmt.filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
     # If include_categories passed, then filter recipes where categories intersect at least with one of these
     if include_categories:
         stmt = stmt.filter(Recipes.categories.any(RecipeCategories.name.in_(include_categories)))
@@ -384,7 +386,7 @@ def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
     """
     recipe_response = dict(recipe.__dict__)
     recipe_response["ingredients"] = [
-        RecipeIngredientResponseModel(name=i.ingredient.name, value=i.value, dimension=i.dimension.name) for i
+        RecipeIngredientResponseModel(name=i.ingredient.name, value=i.value, dimension=i.dimension.name, groups=[j.name for j in i.ingredient.groups]) for i
         in
         recipe_response["ingredients"]]
     recipe_response["steps"] = [i.content for i in
@@ -435,6 +437,10 @@ async def create_new_recipe(
     # adding categories to recipe. if ingredient don't exist, first create new ingredient
     for category in categories:
         new_recipe.categories.append(await get_category_or_create_if_not_exists(category, session))
+    new_recipe.allowed_groups.extend([
+        await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session),
+        await get_group_model_or_create_if_not_exists(DEFAULT_USER_GROUP_NAME, session=session)
+    ])
     filename = f"{current_user.username}/recipes/{new_recipe.title}/{get_raw_filename(image.filename)}"
     S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
     new_recipe.image = filename

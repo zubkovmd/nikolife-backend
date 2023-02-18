@@ -5,6 +5,7 @@ In this module FastAPI application is initializing.
 import sentry_sdk
 import fastapi
 
+from fastapi.middleware.cors import CORSMiddleware
 
 from prometheus_fastapi_instrumentator import Instrumentator
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -26,6 +27,13 @@ if settings.sentry:
     )
 
 app = fastapi.FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(router)
 create_admin(app)
 

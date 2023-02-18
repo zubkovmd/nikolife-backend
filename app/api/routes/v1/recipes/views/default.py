@@ -20,6 +20,7 @@ from app.api.routes.v1.recipes.utils import (
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
+from app.constants import ADMIN_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users, Recipes
 
@@ -149,7 +150,7 @@ async def get_recipe_view(
     """
     async with session.begin():
         recipe = await get_recipe_by_id(recipe_id=recipe_id, session=session)
-        if len(
+        if ADMIN_GROUP_NAME not in current_user.groups and len(
                 set(group for group in current_user.groups)
                 .intersection(set(i.name for i in recipe.allowed_groups))
         ) == 0:

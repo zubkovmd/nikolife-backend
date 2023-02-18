@@ -8,6 +8,7 @@ import sqlalchemy
 from fastapi import Depends
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.recipes.utility_classes import (
@@ -15,7 +16,7 @@ from app.api.routes.v1.recipes.utility_classes import (
     IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel,
     RecipeCategoriesResponseModel, RecipeCategoryResponseModel, RecipeCompilationsResponseModel,
     RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
-    GetIngredientGroupsResponseModel)
+    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
@@ -128,6 +129,24 @@ async def get_ingredients_view(session: AsyncSession) -> GetIngredientsResponseM
         else:
             ingredients = []
         return GetIngredientsResponseModel(ingredients=ingredients)
+
+
+async def get_ingredients_with_groups_view(session: AsyncSession) -> GetIngredientsWithGroupsResponseModel:
+    """
+    View that returns all ingredients in service.
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with existing ingredients.
+    """
+    async with session.begin():
+        stmt = sqlalchemy.select(Ingredients).options(selectinload(Ingredients.groups))
+        response = await session.execute(stmt)
+        ingredients: List[Ingredients] = response.fetchall()
+        if ingredients:
+            ingredients = [{"name": i[0].name, "groups":[j.name for j in i[0].groups]} for i in ingredients]
+        else:
+            ingredients = []
+        return GetIngredientsWithGroupsResponseModel(ingredients=ingredients)
 
 
 async def get_dimensions_view(session: AsyncSession) -> GetDimensionsResponseModel:

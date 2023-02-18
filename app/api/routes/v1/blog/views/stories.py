@@ -2,8 +2,10 @@
 
 from typing import List
 
-from fastapi import UploadFile
+import sqlalchemy
+from fastapi import UploadFile, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetStoriesResponseModel
@@ -27,6 +29,7 @@ async def get_stories_view(session: AsyncSession):
         return GetStoriesResponseModel(**{
             "stories": [
                 {
+                    "id": story.id,
                     "title": story.title,
                     "thumbnail": S3Manager.get_instance().get_url(f"{story.thumbnail}_small.jpg"),
                     "images": [
@@ -67,3 +70,27 @@ async def put_story_view(
             new_story.story_items.append(StoryItem(image=story_image_filename))
         session.add(new_story)
         return DefaultResponse(detail="Story добавлена")
+
+
+async def delete_story_view(
+        current_user,
+        story_id: int,
+        session: AsyncSession,
+) -> DefaultResponse:
+    """
+    View for story adding route
+
+    :param current_user: User information object.
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with status
+    """
+    async with session.begin():
+        response = await session.execute(sqlalchemy.select(Story).filter(Story.id == story_id))
+        story = response.scalars().first()
+        if not story:
+            raise HTTPException(status_code=404,
+                                detail=f"Стори с id {story_id} не найдена")
+        await session.delete(story)
+        return DefaultResponse(detail="Story добавлена")
+
+

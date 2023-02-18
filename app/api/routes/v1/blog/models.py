@@ -11,6 +11,7 @@ class GetStoriesResponseModel(BaseModel):
     """response model for stories request"""
     class GetStoryResponseModel(BaseModel):
         """response model for one story"""
+        id: int
         title: str
         thumbnail: str
         images: List[str]
@@ -28,6 +29,7 @@ class GetArticlesResponseModel(BaseModel):
     """response model for articles request"""
     class GetArticleResponseModel(BaseModel):
         """response model for one article"""
+        id: int
         title: str
         subtitle: str
         created_at: str
