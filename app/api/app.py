@@ -27,19 +27,21 @@ if settings.sentry:
     )
 
 app = fastapi.FastAPI()
+
+Instrumentator().instrument(app).expose(app)
+app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 @app.on_event("startup")
 async def startup():
     """startup methods for FastAPI application"""
-    Instrumentator().instrument(app).expose(app)
     if settings.environment == "development":
         await create_superuser()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 app.include_router(router)
 create_admin(app)
 
