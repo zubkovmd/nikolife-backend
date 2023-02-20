@@ -12,14 +12,16 @@ from app.api.routes.v1.recipes.utility_classes import (
     GetRecipesResponseModel, RecipeResponseModel, RecipeCategoriesResponseModel,
     RecipeLikesRequestModel, FindResponseModel, RecipeCompilationsResponseModel,
     CreateCompilationRequestModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
-    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel)
+    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel, RecipeOneCompilationResponseModel,
+    UpdateCompilationRequestModel)
 from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe_view, delete_recipe_view, \
     create_recipe_view, update_recipe_view, get_liked_recipes_view, get_recipes_by_ingredient_view, \
     get_recipes_by_category_view
 
 from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view, get_ingredients_view, \
     get_dimensions_view, get_ingredients_groups_view, toggle_recipe_like_view, \
-    find_all_view, get_recipes_compilations_view, create_recipes_compilation_view, get_ingredients_with_groups_view
+    find_all_view, get_recipes_compilations_view, create_recipes_compilation_view, get_ingredients_with_groups_view, \
+    get_one_compilation_view, update_recipes_compilation_view, delete_recipes_compilation_view
 from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
@@ -215,6 +217,22 @@ async def get_recipes_compilations(
     return await get_recipes_compilations_view(session)
 
 
+@router.get("/compilations/one/{compilation_id}", response_model=RecipeOneCompilationResponseModel)
+async def get_recipes_compilations(
+        compilation_id: int,
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+):
+    """
+    Route returns all recipe compilations.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set an image.
+
+    :param compilation_id: id of compilation
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with available compilations.
+    """
+    return await get_one_compilation_view(session, compilation_id=compilation_id)
+
+
 @router.post("/compilations", response_model=DefaultResponse)
 async def create_recipes_compilation(
         recipe_ids: List[int] = Form(...),
@@ -242,6 +260,60 @@ async def create_recipes_compilation(
             image=image,
             title=title),
         session)
+
+
+@router.patch("/compilations", response_model=DefaultResponse)
+async def create_recipes_compilation(
+        compilation_id: int = Form(...),
+        recipe_ids: List[int] = Form(...),
+        image: Optional[UploadFile] = File(default=None),
+        title: str = Form(...),
+        current_user: UserModel = Depends(get_admin_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+):
+    """
+    Route for updating existing compilation.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set a image.
+
+    :param recipe_ids: id's of recipes that should appear in new compilation.
+    :param image: Compilation image.
+    :param title: Compilation title.
+    :param current_user: User information object.
+    :param session: SQlAlchemy AsyncSession object.
+    :return: List of available compilations.
+    """
+    return await update_recipes_compilation_view(
+        current_user,
+        # Place form fields in a pydantic model
+        UpdateCompilationRequestModel(
+            compilation_id=compilation_id,
+            recipe_ids=recipe_ids,
+            image=image,
+            title=title),
+        session)
+
+
+@router.delete("/compilations/del", response_model=DefaultResponse)
+async def create_recipes_compilation(
+        compilation_id: int,
+        current_user: UserModel = Depends(get_admin_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+):
+    """
+    Route for deleting existing compilation.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set a image.
+
+
+    :param compilation_id: compilation id
+    :param current_user: User information object.
+    :param session: SQlAlchemy AsyncSession object.
+    :return: List of available compilations.
+    """
+    return await delete_recipes_compilation_view(
+        current_user=current_user,
+        # Place form fields in a pydantic model
+        compilation_id=compilation_id,
+        session=session)
 
 
 @router.post("/toggle_recipe_like", response_model=DefaultResponse)

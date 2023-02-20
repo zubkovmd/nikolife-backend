@@ -48,7 +48,15 @@ class CreateCompilationRequestModel(BaseModel):
     """Model for recipe compilation creation"""
     recipe_ids: List[int]
     title: str
-    image: UploadFile
+    image: Optional[UploadFile]
+
+
+class UpdateCompilationRequestModel(BaseModel):
+    """Model for recipe compilation creation"""
+    compilation_id: int
+    recipe_ids: List[int]
+    title: str
+    image: Optional[UploadFile]
 
 
 class RecipeLikesRequestModel(BaseModel):
@@ -67,8 +75,21 @@ class RecipeCategoriesResponseModel(BaseModel):
     categories: List[RecipeCategoryResponseModel]
 
 
+class RecipeOneCompilationRecipe(BaseModel):
+    id: int
+    title: str
+
+
+class RecipeOneCompilationResponseModel(BaseModel):
+    compilation_id: int
+    name: str
+    image: str
+    recipes: List[RecipeOneCompilationRecipe]
+
+
 class RecipeCompilationResponseModel(BaseModel):
     """Model for recipe compilation with image"""
+    compilation_id: int
     name: str
     image: str
 

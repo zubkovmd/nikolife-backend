@@ -5,10 +5,11 @@ Utility views for recipe routes
 from typing import List
 
 import sqlalchemy
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.recipes.utility_classes import (
@@ -16,7 +17,8 @@ from app.api.routes.v1.recipes.utility_classes import (
     IngredientFindResponseModel, CategoryFindResponseModel, CreateCompilationRequestModel,
     RecipeCategoriesResponseModel, RecipeCategoryResponseModel, RecipeCompilationsResponseModel,
     RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
-    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel)
+    GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel, RecipeOneCompilationResponseModel,
+    UpdateCompilationRequestModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
@@ -69,7 +71,7 @@ async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilat
     """
     async with session.begin():
         # First, select all existing compilations
-        stmt = sqlalchemy.select(RecipeCompilations)
+        stmt = sqlalchemy.select(RecipeCompilations).order_by(RecipeCompilations.id.desc())
         response = await session.execute(stmt)
         compilations: List[RecipeCompilations] = response.scalars().all()
         # If compilations found, for each we should make link to s3
@@ -79,6 +81,7 @@ async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilat
 
                 found_compilations.append(
                     RecipeCompilationResponseModel(
+                        compilation_id=compilation.id,
                         name=compilation.name,
                         image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg")
                     )
@@ -86,6 +89,36 @@ async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilat
             return RecipeCompilationsResponseModel(compilations=found_compilations)
         else:
             return RecipeCompilationsResponseModel(compilations=[])
+
+
+async def get_one_compilation_view(session: AsyncSession, compilation_id: int) -> RecipeOneCompilationResponseModel:
+    """
+    View returns all recipe compilations registered in service.
+
+    :param session: SQLALchemy AsyncSession object.
+    :return: Response with compilations
+    """
+    async with session.begin():
+        # First, select all existing compilations
+        response = await session.execute(
+            sqlalchemy.select(RecipeCompilations)
+            .filter(RecipeCompilations.id == compilation_id)
+            .options(selectinload(RecipeCompilations.recipes))
+        )
+        compilation: RecipeCompilations = response.scalars().first()
+        # If compilations found, for each we should make link to s3
+        if not compilation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Подборка с id {compilation_id} не найдена"
+            )
+
+        return RecipeOneCompilationResponseModel(
+            compilation_id=compilation.id,
+            name=compilation.name,
+            image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg"),
+            recipes=[i.__dict__ for i in compilation.recipes]
+        )
 
 
 async def create_recipes_compilation_view(
@@ -111,6 +144,75 @@ async def create_recipes_compilation_view(
         # Add new compilation
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
     return DefaultResponse(detail="Подборка добавлена")
+
+
+async def update_recipes_compilation_view(
+        current_user: UserModel,
+        request: UpdateCompilationRequestModel,
+        session: AsyncSession):
+    """
+    View that updates recipe compilation.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set an image.
+
+    :param current_user: User information object
+    :param request: Request with compilation data
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with status
+    """
+    async with session.begin():
+        # First, select all recipes, selected for new compilation
+        response = await session.execute(
+            sqlalchemy.select(RecipeCompilations)
+            .filter(RecipeCompilations.id == request.compilation_id)
+            .options(selectinload(RecipeCompilations.recipes))
+        )
+        compilation = response.scalars().first()
+        if not compilation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Подборка с id {request.compilation_id} не найдена"
+            )
+        stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
+        recipes = (await session.execute(stmt)).scalars().all()
+        compilation.recipes = recipes
+        if request.image:
+            # Load compilation image to s3
+            filename = f"{current_user.username}/compilations/{request.title}/{get_raw_filename(request.image.filename)}"
+            S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
+            compilation.image=filename
+        await session.commit()
+    return DefaultResponse(detail="Подборка обновлена")
+
+
+async def delete_recipes_compilation_view(
+        current_user: UserModel,
+        compilation_id: int,
+        session: AsyncSession):
+    """
+    View that updates recipe compilation.
+    Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set an image.
+
+    :param current_user: User information object
+    :param request: Request with compilation data
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with status
+    """
+    async with session.begin():
+        # First, select all recipes, selected for new compilation
+        response = await session.execute(
+            sqlalchemy.select(RecipeCompilations)
+            .filter(RecipeCompilations.id == compilation_id)
+            .options(selectinload(RecipeCompilations.recipes))
+        )
+        compilation = response.scalars().first()
+        if not compilation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Подборка с id {compilation_id} не найдена"
+            )
+        await session.delete(compilation)
+        await session.commit()
+    return DefaultResponse(detail="Подборка удалена")
 
 
 async def get_ingredients_view(session: AsyncSession) -> GetIngredientsResponseModel:
