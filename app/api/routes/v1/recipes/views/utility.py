@@ -166,7 +166,7 @@ async def update_recipes_compilation_view(
             .filter(RecipeCompilations.id == request.compilation_id)
             .options(selectinload(RecipeCompilations.recipes))
         )
-        compilation = response.scalars().first()
+        compilation: RecipeCompilations = response.scalars().first()
         if not compilation:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -175,6 +175,7 @@ async def update_recipes_compilation_view(
         stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
         recipes = (await session.execute(stmt)).scalars().all()
         compilation.recipes = recipes
+        compilation.name = request.title
         if request.image:
             # Load compilation image to s3
             filename = f"{current_user.username}/compilations/{request.title}/{get_raw_filename(request.image.filename)}"
