@@ -1,9 +1,9 @@
 """Whole application configuration. Configuration uses pydantic BaseSettings.
 Check https://pydantic-docs.helpmanual.io/usage/settings/"""
-
+import base64
 from typing import Literal, Optional
 
-from pydantic import BaseModel, BaseSettings, validator
+from pydantic import BaseModel, BaseSettings, validator, Field
 
 
 class Database(BaseModel):
@@ -84,11 +84,37 @@ class ApiSettings(BaseModel):
         return secret_key.replace("\n", "").replace("\r", "")
 
 
+class AppleAuthProviderSettings(BaseModel):
+    """Apple authentication settings"""
+    private_key: str  # Base64 encoded key
+    auth_link: str = "https://appleid.apple.com/auth/token"
+    team_id: str # apple developer team id
+    bundle_id: str # apple developer bundle id
+
+    @validator("private_key")
+    def decode_base64_private_key(cls, value):
+        return base64.b64decode(value)
+
+
+class GoogleAuthProviderSettings(BaseModel):
+    """Google authentication settings"""
+    auth_link: str = "https://www.googleapis.com/oauth2/v1/userinfo"
+
+
+class UserAuthenticationSettings(BaseModel):
+    """Settings for user authentication providers"""
+    google_provider: GoogleAuthProviderSettings = GoogleAuthProviderSettings(
+        auth_link="https://www.googleapis.com/oauth2/v1/userinfo"
+    )
+    apple_provider: AppleAuthProviderSettings
+
+
 class Settings(BaseSettings):
     """Base settings class"""
     database: Database
     s3: S3Service
     sentry: Optional[Sentry]
+    user_auth: UserAuthenticationSettings
     api: ApiSettings
     environment: Literal['development', 'testing', 'production']
 

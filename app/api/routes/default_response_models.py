@@ -39,7 +39,7 @@ class UserRequestResponse(DefaultResponse):
     user: User
 
 
-class UserGoogleAuthResponse(DefaultResponse):
+class UserAuthResponse(DefaultResponse):
     """Response with user info for google authentication"""
     user: User
     jwt: str

@@ -7,15 +7,16 @@ from typing import Union
 from fastapi import Depends, UploadFile, Form, File, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
+from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserAuthResponse
 from app.api.routes.v1.groups.router import router as groups_router
 from app.api.routes.v1.users.models import RegisterRequestModel
 from app.api.routes.v1.users.views import get_user_by_id_view, register_user_view, delete_user_view, \
-    update_user_view, get_or_create_google_user_view
+    update_user_view, authenticate_by_provider_view
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
 from app.utils import S3Manager
+from app.utils.auth import AvailableAuthProviders
 
 router = APIRouter(prefix="/users", )
 router.include_router(groups_router)
@@ -70,22 +71,24 @@ async def register_user(
     return await register_user_view(user=user, session=session)
 
 
-@router.get("/googleUser", response_model=UserGoogleAuthResponse)
-async def get_or_create_google_user(
+@router.get("/authenticate_by_provider", response_model=UserAuthResponse)
+async def authenticate_by_provider(
         token: str,
+        provider: AvailableAuthProviders,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-) -> UserGoogleAuthResponse:
+) -> UserAuthResponse:
     """
-    This route is using for Google authentication. First it receives a Google token. After,
+    This route is using for apple authentication. First it receives a Google token. After,
     service checks user info by this token with googleapis.com/oauth2/v1/userinfo. If this user already exists,
     service returns user object. Else first service creates user with this info and then returns user object.
 
     :param token: Google token.
+    :param provider: Authentication provider type
     :param session: SQLAlchemy AsyncSession object
     :return: Response with user object
     """
 
-    return await get_or_create_google_user_view(token=token, session=session)
+    return await authenticate_by_provider_view(token=token, provider=provider, session=session)
 
 
 @router.delete("/", response_model=DefaultResponse)

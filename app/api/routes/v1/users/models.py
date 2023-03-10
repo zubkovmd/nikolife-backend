@@ -5,11 +5,9 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class GoogleResponseModel(BaseModel):
+class AuthProviderResponseModel(BaseModel):
     """utility model for response data from google api"""
-    id: str
     email: str
-    name: str
     picture: Optional[str]
 
 

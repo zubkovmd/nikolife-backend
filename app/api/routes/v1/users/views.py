@@ -13,18 +13,18 @@ from fastapi import Depends, HTTPException, Form, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserGoogleAuthResponse
+from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserAuthResponse
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
-from app.api.routes.v1.users.models import GoogleResponseModel
 from app.api.routes.v1.users.models import RegisterRequestModel
-from app.api.routes.v1.users.utils import get_user_by_id, get_google_user, get_user_by_username
-from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash, create_access_token
+from app.api.routes.v1.users.utils import get_user_by_id, get_user_by_username
+from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import get_raw_filename
-from app.constants import DEFAULT_USER_GROUP_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.constants import DEFAULT_USER_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
 from app.utils import S3Manager
+from app.utils.auth import AvailableAuthProviders, AppleAuthentication, GoogleAuthentication, AuthBase
 
 
 async def get_user_by_id_view(
@@ -47,52 +47,34 @@ async def get_user_by_id_view(
         return UserRequestResponse(detail="Пользователь найден", user=User(**dicted))
 
 
-async def get_or_create_google_user_view(
+async def authenticate_by_provider_view(
         token: str,
+        provider: AvailableAuthProviders,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-) -> UserGoogleAuthResponse:
+) -> UserAuthResponse:
     """
-    View for get or create google user route (GET .../users/googleUser )
-    Description: This view receives google token. First, service request user data for this token
-    from googleapis.com/oauth2/v1/userinfo. Then, service returns user data if user already registered,
-    else first service register this user.
+    View gets user object by passed token with selected auth provider
 
-    :param token: Google token
+    :param token: Authentication token
+    :param provider: Authentication provider type
     :param session: SQLAlchemy AsyncSession object
     :return: user object
     """
-    google_user: GoogleResponseModel = await get_google_user(token)  # get google user info
-    async with session.begin():
-        # Find user by email and create account if user does not exist
-        stmt = sqlalchemy.select(Users).filter(Users.email == google_user.email).limit(1)
-        user: Optional[Users] = (await session.execute(stmt)).scalars().first()
-        if not user:  # No user object for passed email in database. So we need to create new one
-            user = Users(
-                username=google_user.email,
-                email=google_user.email,
-                info="",
-                password=uuid.uuid4().hex,
-                name=google_user.name,
-            )
-            if google_user.picture:  # if use has a Google picture, then we should add it to service
 
-                filename = f"{google_user.email}/avatar"
-                S3Manager.get_instance().send_image_shaped(
-                    image=UploadFile(file=BytesIO(requests.get(google_user.picture).content), filename=filename),
-                    base_filename=filename)
-                user.image = filename
-            # add default 'user' group to new user groups
-            user.groups.append(await get_group_model_or_create_if_not_exists(group_name=DEFAULT_USER_GROUP_NAME,
-                                                                             session=session))
-            session.add(user)
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        token = create_access_token(
-            username=user.username, expires_delta=access_token_expires
-        )
+    async with session.begin():
+        if provider == AvailableAuthProviders.APPLE:
+            user = await AppleAuthentication().authenticate(token=token, session=session)
+        elif provider == AvailableAuthProviders.GOOGLE:
+            user = await GoogleAuthentication().authenticate(token=token, session=session)
+        else:
+            raise HTTPException(
+                detail=f"Не найден провайдер {provider} для аутентификации",
+                status_code=404,
+            )
         dicted = user.__dict__.copy()
         if user.image:
             dicted["image"] = S3Manager.get_instance().get_url(f"{user.image}_small.jpg")
-        return UserGoogleAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=token)
+        return UserAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=await AuthBase.generate_jwt(user=user))
 
 
 async def register_user_view(
