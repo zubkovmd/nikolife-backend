@@ -28,7 +28,7 @@ if settings.sentry:
 
 app = fastapi.FastAPI()
 
-Instrumentator().instrument(app).expose(app)
+# Instrumentator().instrument(app).expose(app)
 app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
