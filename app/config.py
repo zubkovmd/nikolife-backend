@@ -46,6 +46,10 @@ class S3Service(BaseModel):
     """s3 endpoint"""
     bucket: str
     """s3 bucket"""
+    host: str
+    """s3 host"""
+    port: int
+    """s3 port"""
 
     @validator("acckey")
     def cleanup_access_key(cls, acckey):

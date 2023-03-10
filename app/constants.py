@@ -16,9 +16,3 @@ DEV_SUPERUSER_LOGIN = "admin@mail.ru"
 # ATTENTION! PASSWORD SHOULD BE HASHED WITH CryptContext(schemes=["bcrypt"]).hash(PWD). Only then password can be pasted
 # here. Also, you need change user password in postman (in postman password should not be crypted)
 DEV_SUPERUSER_PASSWORD = "$2b$12$W6aPE5HGb8dcP1leBZhICOGw8kq095MzAffo5jCBM10YP1BPXVBZa"
-# Backend application host
-BACKEND_HOST = "84.252.73.50"
-# S3 service api port
-S3_PORT = 9000
-# S3 service bucket
-S3_BUCKET = "test"

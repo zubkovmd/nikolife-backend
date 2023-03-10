@@ -11,8 +11,6 @@ from fastapi import UploadFile
 
 from app.api.routes.v1.utils.utility import convert_pillow_image_to_jpg_bytes
 from app.config import settings
-from app.constants import BACKEND_HOST, S3_BUCKET, S3_PORT
-
 
 class S3Manager:
     """
@@ -21,6 +19,7 @@ class S3Manager:
     """
     _bucket: str
     _instance = None
+
 
     def __init__(self):
         """S3 manager initialization"""
@@ -107,7 +106,7 @@ class S3Manager:
         :param object_key: key of object.
         :return: link to object.
         """
-        return f"http://{BACKEND_HOST}:{S3_PORT}/{S3_BUCKET}/{object_key.replace(' ', '%20')}"
+        return f"http://{settings.s3.host}:{settings.s3.port}/{settings.s3.bucket}/{object_key.replace(' ', '%20')}"
 
     # def get_url(self, object_key) -> str:
     #     """
