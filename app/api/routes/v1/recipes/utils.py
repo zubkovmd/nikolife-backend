@@ -302,6 +302,7 @@ async def select_recipes_and_filter_them(
         select(Recipes)
         .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
         .options(selectinload(Recipes.allowed_groups))
+        .options(selectinload(Recipes.liked_by))
     )
     if not ADMIN_GROUP_NAME in user_groups:
         # stmt = stmt.filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
@@ -352,7 +353,7 @@ def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipe
             image = None
         recipe_dicted["image"] = image
         recipe_dicted["liked"] = current_user in recipe.liked_by if current_user else False
-        recipe_dicted["allowed"] = True if any((True for user_group in (current_user.groups if current_user else ["no_auth"]) if user_group in [group.name for group in recipe.allowed_groups])) else False
+        recipe_dicted["allowed"] = True if any((True for user_group in (current_user.groups if current_user else ["no_auth"]) if (user_group.name if user_group is not "no_auth" else "no_auth") in [group.name for group in recipe.allowed_groups])) else False
         recipes_to_return.append(GetRecipesRecipeResponseModel(**recipe_dicted))
     return sorted(recipes_to_return, key=lambda x: x.allowed, reverse=True)
 
