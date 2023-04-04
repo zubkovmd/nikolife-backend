@@ -2,7 +2,7 @@
 Utility views for recipe routes
 """
 
-from typing import List
+from typing import List, Optional
 
 import sqlalchemy
 from fastapi import Depends, HTTPException
@@ -21,7 +21,7 @@ from app.api.routes.v1.recipes.utility_classes import (
     UpdateCompilationRequestModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import get_user_by_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token_or_none
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import get_raw_filename
 from app.database import DatabaseManagerAsync
@@ -36,7 +36,9 @@ from app.database.models.base import (
 from app.utils import S3Manager
 
 
-async def get_recipes_categories_view(session: AsyncSession) -> RecipeCategoriesResponseModel:
+async def get_recipes_categories_view(
+        session: AsyncSession,
+) -> RecipeCategoriesResponseModel:
     """
     View returns all recipe categories in service. As category image service selects
     image of first recipe with image in this category
@@ -46,23 +48,29 @@ async def get_recipes_categories_view(session: AsyncSession) -> RecipeCategories
     """
     async with session.begin():
         # First, found all categories
-        stmt = sqlalchemy.select(RecipeCategories.name)
+        stmt = (sqlalchemy
+                .select(RecipeCategories)
+                )
         response = await session.execute(stmt)
-        categories = response.fetchall()
+        categories: List[RecipeCategories] = response.fetchall()
         # If categories was found, then for each category we should set image.
+        categories = [category[0] for category in categories]
         if categories:
             found_categories = []
             for category in categories:
-                image = await get_category_image(category=category[0], session=session)
+                image = await get_category_image(category=category.name, session=session)
                 if image is None:
                     continue
-                found_categories.append(RecipeCategoryResponseModel(name=category[0], image=image))
+                found_categories.append(RecipeCategoryResponseModel(name=category.name, image=image))
             return RecipeCategoriesResponseModel(categories=found_categories)
         else:
             return RecipeCategoriesResponseModel(categories=[])
 
 
-async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilationsResponseModel:
+async def get_recipes_compilations_view(
+        session: AsyncSession,
+        current_user: Optional[UserModel]
+) -> RecipeCompilationsResponseModel:
     """
     View returns all recipe compilations registered in service.
 
@@ -71,14 +79,18 @@ async def get_recipes_compilations_view(session: AsyncSession) -> RecipeCompilat
     """
     async with session.begin():
         # First, select all existing compilations
-        stmt = sqlalchemy.select(RecipeCompilations).order_by(RecipeCompilations.id.desc())
+        stmt = (
+            sqlalchemy.select(RecipeCompilations)
+            .order_by(RecipeCompilations.id.desc())
+            .options(selectinload(RecipeCompilations.recipes))
+            .options(selectinload(RecipeCompilations.recipes, Recipes.allowed_groups))
+        )
         response = await session.execute(stmt)
         compilations: List[RecipeCompilations] = response.scalars().all()
         # If compilations found, for each we should make link to s3
         if compilations:
             found_compilations = []
             for compilation in compilations:
-
                 found_compilations.append(
                     RecipeCompilationResponseModel(
                         compilation_id=compilation.id,

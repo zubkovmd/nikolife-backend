@@ -40,7 +40,6 @@ async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRe
 @router.get(
     "/by_id/{user_id}",
     response_model=Union[UserRequestResponse, DefaultResponse],
-    dependencies=[Depends(get_user_by_token)]
 )
 async def get_user_by_id(
         user_id: int,

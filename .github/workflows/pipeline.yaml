@@ -53,5 +53,6 @@ jobs:
             -e USER_AUTH__APPLE_PROVIDER__TEAM_ID=${{secrets.USER_AUTH__APPLE_PROVIDER__TEAM_ID}} \
             -e ENVIRONMENT=${{secrets.ENVIRONMENT}} \
             --name ${{github.event.repository.name}} --network ${{secrets.BACKEND_DOCKER_NETWORK}} \
+            --restart always \
             -d \
             ${{secrets.DOCKERHUB_USERNAME}}/${{github.event.repository.name}}:latest"

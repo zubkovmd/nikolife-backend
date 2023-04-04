@@ -133,6 +133,27 @@ async def get_user_by_token(
     return user_to_return
 
 
+async def get_user_by_token_or_none(
+        token: str = Depends(OAuth2PasswordBearer(tokenUrl="token", auto_error=False)),
+) -> Optional[UserModel]:
+    """
+    Function for FastAPI dependency that receives bearer token with request headers and returns user if token is valid.
+    Also checks required group in user groups. Default group to check is **DEFAULT_USER_GROUP_NAME**
+
+    :param token: Request header bearer token that will be received via FastAPI dependency.
+    :return: User instance
+    """
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+    except:
+        return None
+    user_to_return = await get_user(username=username)
+    return user_to_return
+
+
 async def get_admin_by_token(user: Users = Depends(get_user_by_token)) -> UserModel:
     """
     Function for FastAPI dependency. Copied **get_user_by_token** function, but checks if user is admin

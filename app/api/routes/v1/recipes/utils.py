@@ -301,12 +301,15 @@ async def select_recipes_and_filter_them(
     stmt = (
         select(Recipes)
         .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
-        .options(selectinload('*'))
+        .options(selectinload(Recipes.allowed_groups))
     )
     if not ADMIN_GROUP_NAME in user_groups:
-        stmt.filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
+        # stmt = stmt.filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
+        pass
+
     # If include_categories passed, then filter recipes where categories intersect at least with one of these
     if include_categories:
+        stmt = stmt.options(selectinload(Recipes.categories))
         stmt = stmt.filter(Recipes.categories.any(RecipeCategories.name.in_(include_categories)))
 
     if prefer_ingredients or exclude_groups:
@@ -324,6 +327,7 @@ async def select_recipes_and_filter_them(
         #     stmt = stmt.filter(IngredientsGroups.name.notin_(exclude_groups))
     # if compilation passed, then we should select recipes that selected for this compilation
     if compilation:
+        stmt = stmt.options(selectinload(Recipes.compilations))
         stmt = stmt.filter(Recipes.compilations.any(RecipeCompilations.name.in_([compilation])))
     response = await session.execute(stmt)
     recipes: List[Recipes] = response.scalars().all()
@@ -347,9 +351,10 @@ def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipe
         else:
             image = None
         recipe_dicted["image"] = image
-        recipe_dicted["liked"] = current_user in recipe.liked_by
+        recipe_dicted["liked"] = current_user in recipe.liked_by if current_user else False
+        recipe_dicted["allowed"] = True if any((True for user_group in (current_user.groups if current_user else ["no_auth"]) if user_group in [group.name for group in recipe.allowed_groups])) else False
         recipes_to_return.append(GetRecipesRecipeResponseModel(**recipe_dicted))
-    return recipes_to_return
+    return sorted(recipes_to_return, key=lambda x: x.allowed, reverse=True)
 
 
 async def select_liked_recipes(
@@ -394,7 +399,7 @@ def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
     recipe_response["categories"] = [i.name for i in recipe_response["categories"]]
     recipe_response["image"] = None if recipe_response["image"] is None else S3Manager.get_instance().get_url(
         f"{recipe_response['image']}_med.jpg")
-    recipe_response["liked"] = current_user.username in [user.username for user in recipe.liked_by]
+    recipe_response["liked"] = current_user.username in [user.username for user in recipe.liked_by] if current_user else False
     return recipe_response
 
 
@@ -518,7 +523,7 @@ async def get_category_image(category: str, session: AsyncSession) -> Optional[s
         sqlalchemy.select(RecipeCategories)
         .where(RecipeCategories.name == category)
         .limit(1)
-        .options(selectinload("*"))
+        .options(selectinload(RecipeCategories.recipes))
     )
     resp = await session.execute(stmt)
     category: RecipeCategories = resp.scalars().first()

@@ -1,5 +1,4 @@
 """Default views for recipes routes"""
-
 from typing import List, Optional
 
 from fastapi import Depends, HTTPException, UploadFile
@@ -18,9 +17,9 @@ from app.api.routes.v1.recipes.utils import (
     build_recipes_output, build_recipe_output, check_is_user_allow_to_modify_recipe,
     create_new_recipe, update_recipe, select_liked_recipes)
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import get_user_by_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token_or_none
 from app.api.routes.v1.utils.service_models import UserModel
-from app.constants import ADMIN_GROUP_NAME
+from app.constants import ADMIN_GROUP_NAME, NOT_AUTHENTICATED_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users, Recipes
 
@@ -31,7 +30,7 @@ async def get_recipes_view(
         include_categories: Optional[List[str]],
         compilation: Optional[str],
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none),
 ) -> GetRecipesResponseModel:
     """
     View for recipes request
@@ -45,11 +44,10 @@ async def get_recipes_view(
     :return: found recipes list
     """
     async with session.begin():
-
         # get recipes with selected filters
         recipes = await select_recipes_and_filter_them(
             session=session,
-            user_groups=current_user.groups,
+            user_groups=current_user.groups if current_user else [NOT_AUTHENTICATED_GROUP_NAME],
             include_categories=include_categories,
             prefer_ingredients=prefer_ingredients,
             compilation=compilation,
@@ -58,7 +56,7 @@ async def get_recipes_view(
         if not recipes:
             return GetRecipesResponseModel(recipes=[])
         # now for each recipe we should make image link and add 'liked' field (it's liked by request user)
-        current_user: Users = await get_user_by_id(user_id=current_user.id, session=session)
+        current_user: Users = await get_user_by_id(user_id=current_user.id, session=session) if current_user else None
         return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
@@ -136,7 +134,7 @@ async def get_liked_recipes_view(
 async def get_recipe_view(
         recipe_id: int,
         session: AsyncSession,
-        current_user: UserModel,
+        current_user: Optional[UserModel],
 ) -> RecipeResponseModel:
     """
     View for request recipe by id.
@@ -150,7 +148,7 @@ async def get_recipe_view(
     """
     async with session.begin():
         recipe = await get_recipe_by_id(recipe_id=recipe_id, session=session)
-        if ADMIN_GROUP_NAME not in current_user.groups and len(
+        if current_user and ADMIN_GROUP_NAME not in current_user.groups and len(
                 set(group for group in current_user.groups)
                 .intersection(set(i.name for i in recipe.allowed_groups))
         ) == 0:

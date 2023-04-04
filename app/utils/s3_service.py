@@ -108,18 +108,3 @@ class S3Manager:
         """
         return f"http://{settings.s3.host}:{settings.s3.port}/{settings.s3.bucket}/{object_key.replace(' ', '%20')}"
 
-    # def get_url(self, object_key) -> str:
-    #     """
-    #     Method creates link to s3 object and returns it
-    #
-    #     :param object_key: key of object.
-    #     :return: link to object.
-    #     """
-    #     return self.s3_client.generate_presigned_url(
-    #         'get_object',
-    #         Params={
-    #             'Bucket': self._bucket,
-    #             'Key': object_key
-    #         },
-    #         ExpiresIn=700000
-    #     )

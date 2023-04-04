@@ -26,6 +26,7 @@ async def get_user_by_id(user_id: int, session: AsyncSession, join_tables: Optio
         sqlalchemy.select(Users)
         .filter(Users.id == user_id)
         .limit(1)
+        .options(selectinload(Users.groups))
     )
     if join_tables is not None:
         stmt = stmt.options(selectinload(*join_tables))

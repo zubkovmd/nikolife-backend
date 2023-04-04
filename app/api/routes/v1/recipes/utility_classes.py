@@ -180,6 +180,8 @@ class GetRecipesRecipeResponseModel(BaseModel):
     """recipe servings"""
     liked: bool
     """is recipe liked by user who requested it"""
+    allowed: bool
+    """is recipe allowed to user"""
 
 
 class GetRecipesResponseModel(BaseModel):

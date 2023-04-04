@@ -20,7 +20,7 @@ from app.database import DatabaseManagerAsync
 router = APIRouter(prefix="/blog")
 
 
-@router.get("/stories", response_model=GetStoriesResponseModel, dependencies=[Depends(get_user_by_token)])
+@router.get("/stories", response_model=GetStoriesResponseModel)
 async def get_stories(
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ) -> GetStoriesResponseModel:

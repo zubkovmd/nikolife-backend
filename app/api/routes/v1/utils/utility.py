@@ -3,6 +3,20 @@ import io
 from PIL.Image import Image
 
 
+def translate_filename(filename: str) -> str:
+    """
+    Method returns translated filename with spaces ' ' changed to '_'
+
+    :param filename: filename
+    :return: translated filename
+    """
+    symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
+               u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")
+
+    tr = {ord(a): ord(b) for a, b in zip(*symbols)}
+    return '_'.join(filename.translate(tr).split(' '))
+
+
 def get_raw_filename(filename: str) -> str:
     """
     Method returns only raw filename of typed filename.
@@ -12,6 +26,7 @@ def get_raw_filename(filename: str) -> str:
     :return: raw filename
     """
     filename, filetype = filename.split('.')
+
     return filename
 
 

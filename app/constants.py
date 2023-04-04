@@ -6,6 +6,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 100
 ADMIN_GROUP_NAME = "admin"
 # default user group name (sets this group for new users)
 DEFAULT_USER_GROUP_NAME = "user"
+# not authenticated user group
+NOT_AUTHENTICATED_GROUP_NAME = "no_auth"
 # max returned stories count
 MAX_STORIES_COUNT = 10
 # max returned stories count

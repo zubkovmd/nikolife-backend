@@ -22,7 +22,7 @@ from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view,
     get_dimensions_view, get_ingredients_groups_view, toggle_recipe_like_view, \
     find_all_view, get_recipes_compilations_view, create_recipes_compilation_view, get_ingredients_with_groups_view, \
     get_one_compilation_view, update_recipes_compilation_view, delete_recipes_compilation_view
-from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
+from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token, get_user_by_token_or_none
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
 
@@ -32,7 +32,7 @@ router = APIRouter(prefix="/recipes")
 @router.get("/", response_model=GetRecipesResponseModel)
 async def get_recipes(
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none),
         prefer_ingredients: Union[List[str], None] = Query(default=None),
         exclude_groups: Union[List[str], None] = Query(default=None),
         include_categories: Union[List[str], None] = Query(default=None),
@@ -77,7 +77,7 @@ async def get_liked_recipes(
 async def get_recipe(
         recipe_id: int,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token)
+        current_user: UserModel = Depends(get_user_by_token_or_none)
 ):
     """
     Route that returns recipe by recipe id. If recipe not found, then
@@ -192,7 +192,7 @@ async def update_recipe(
 
 @router.get("/categories", response_model=RecipeCategoriesResponseModel)
 async def get_recipes_categories(
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
     """
     Route returns all recipe categories available in service.
@@ -205,7 +205,8 @@ async def get_recipes_categories(
 
 @router.get("/compilations", response_model=RecipeCompilationsResponseModel)
 async def get_recipes_compilations(
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none)
 ):
     """
     Route returns all recipe compilations.
@@ -214,7 +215,7 @@ async def get_recipes_compilations(
     :param session: SQLAlchemy AsyncSession object.
     :return: Response with available compilations.
     """
-    return await get_recipes_compilations_view(session)
+    return await get_recipes_compilations_view(session, current_user)
 
 
 @router.get("/compilations/one/{compilation_id}", response_model=RecipeOneCompilationResponseModel)
