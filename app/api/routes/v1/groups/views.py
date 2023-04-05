@@ -1,4 +1,7 @@
 """Views for user groups router"""
+from typing import List
+
+import sqlalchemy
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -13,7 +16,7 @@ from app.api.routes.v1.users.models import GroupRequestModel, GroupChangeRequest
     AddUserToGroupRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import check_user_is_in_group
-from app.database.models.base import Users
+from app.database.models.base import Users, Groups
 
 
 async def add_group_view(
@@ -118,3 +121,16 @@ async def remove_user_from_group_view(
         needed_group = list(filter(lambda x: x.name == group_model.group_name, user.groups))[0]
         user.groups.remove(needed_group)
         return DefaultResponse(detail=f"Пользователь удален из группы {group_model.group_name}")
+
+
+async def get_available_groups_view(session: AsyncSession):
+    """
+    View for getting available groups
+
+    :param session: SQLAlchemy AsyncSession object.
+    :return:Response with groups.
+    """
+    async with session.begin():
+        groups = await session.execute(sqlalchemy.select(Groups))
+        groups: List[Groups] = groups.scalars().all()
+        return {"groups": [group.name for group in groups]}

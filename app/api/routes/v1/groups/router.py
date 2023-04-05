@@ -5,8 +5,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse
+from app.api.routes.v1.groups.models import AvailableGroupsResponseModel
 from app.api.routes.v1.groups.views import add_group_view, remove_group_view, change_group_name_view, \
-    add_user_to_group_view, remove_user_from_group_view
+    add_user_to_group_view, remove_user_from_group_view, get_available_groups_view
 from app.api.routes.v1.users.models import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
 from app.api.routes.v1.utils.auth import get_admin_by_token
@@ -94,3 +95,16 @@ async def remove_user_from_group(
     :return: Response with status.
     """
     return await remove_user_from_group_view(group_model=group_model, session=session)
+
+
+@router.get("/get_all", response_model=AvailableGroupsResponseModel, dependencies=[Depends(get_admin_by_token)])
+async def get_available_groups(
+    session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+) -> DefaultResponse:
+    """
+    Method returns all available users groups
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Response with available groups
+    """
+    return await get_available_groups_view(session=session)
+

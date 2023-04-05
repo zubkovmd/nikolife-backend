@@ -162,6 +162,7 @@ class RecipeResponseModel(BaseModel):
     """servings count"""
     liked: bool
     """is recipe liked by user who requested it"""
+    allowed_groups: List[str]
 
 
 class GetRecipesRecipeResponseModel(BaseModel):

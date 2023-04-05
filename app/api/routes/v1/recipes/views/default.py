@@ -182,6 +182,7 @@ async def create_recipe_view(
         categories: str,
         steps: str,
         ingredients: str,
+        allowed_groups: Optional[str],
         session: AsyncSession,
         current_user: UserModel,
 ) -> DefaultResponseWithPayload:
@@ -198,6 +199,7 @@ async def create_recipe_view(
     :param steps: Recipe steps.
     :param ingredients: Recipe ingredients (if ingredient do not exist in database, then new category
     with this name will be added to service).
+    :param allowed_groups: List of user groups allowed to watch this recipe
     :param session: SQLAlchemy AsyncSession object.
     :param current_user: User information object.
     :return: Response with status and recipe id if recipe was created
@@ -208,6 +210,7 @@ async def create_recipe_view(
         ingredients=ingredients)
     steps: List[CreateRecipeStepRequestModel] = parse_steps_to_pydantic_models(steps=steps)
     categories: List[str] = parse_categories_to_list(categories)
+    allowed_groups = eval(allowed_groups) if allowed_groups else None
 
     async with session.begin():
         created_recipe_id = await create_new_recipe(
@@ -219,6 +222,7 @@ async def create_recipe_view(
             categories=categories,
             steps=steps,
             ingredients=ingredients,
+            allowed_groups=allowed_groups,
             session=session,
             current_user=current_user
         )
@@ -235,6 +239,7 @@ async def update_recipe_view(
     categories: Optional[str],
     steps: Optional[str],
     ingredients: Optional[str],
+    allowed_groups: Optional[str],
     session: AsyncSession,
     current_user: UserModel,
 ):
@@ -251,6 +256,7 @@ async def update_recipe_view(
     :param categories: If passed, new recipe categories
     :param steps: If passed, new recipe steps
     :param ingredients: If passed, new recipe ingredients
+    :param allowed_groups: List of user groups allowed to watch this recipe
     :param session: SQLAlchemy AsyncSession object
     :param current_user: User information object.
     :return: Response with status
@@ -267,6 +273,7 @@ async def update_recipe_view(
             categories=categories,
             steps=steps,
             ingredients=ingredients,
+            allowed_groups=allowed_groups,
             session=session,
             current_user=current_user
         )

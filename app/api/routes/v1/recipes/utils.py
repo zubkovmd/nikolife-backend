@@ -238,6 +238,27 @@ async def update_recipe_categories(
         recipe.categories.append(await get_category_or_create_if_not_exists(new_category, session=session))
 
 
+async def update_recipe_groups(
+        new_groups: List[str],
+        recipe: Recipes,
+        session: AsyncSession
+) -> None:
+    """
+    Method updates allowed user groups for recipe
+
+    :param new_groups: new group names list
+    :param recipe: Recipe that should be updated
+    :param session: SQLAlchemy AsyncSession object
+    :return: None
+    """
+    group_models: List[Groups] = []
+    for group in new_groups:
+        group_model = await get_group_model_or_create_if_not_exists(group, session)
+        if group_model:
+            group_models.append(group_model)
+    recipe.allowed_groups = group_models
+
+
 async def get_recipe_by_id(recipe_id: int, session: AsyncSession) -> Recipes:
     """
     Method search recipe by passed id. If recipe not found, then it throws
@@ -400,6 +421,7 @@ def build_recipe_output(recipe: Recipes, current_user: UserModel) -> dict:
     recipe_response["categories"] = [i.name for i in recipe_response["categories"]]
     recipe_response["image"] = None if recipe_response["image"] is None else S3Manager.get_instance().get_url(
         f"{recipe_response['image']}_med.jpg")
+    recipe_response["allowed_groups"] = [group.name for group in recipe_response["allowed_groups"]]
     recipe_response["liked"] = current_user.username in [user.username for user in recipe.liked_by] if current_user else False
     return recipe_response
 
@@ -413,6 +435,7 @@ async def create_new_recipe(
         categories: List[str],
         steps: List[CreateRecipeStepRequestModel],
         ingredients: List[CreateRecipeIngredientRequestModel],
+        allowed_groups: Optional[List[str]],
         session: AsyncSession,
         current_user: UserModel,
 ) -> int:
@@ -427,6 +450,7 @@ async def create_new_recipe(
     :param categories: If passed, new recipe categories
     :param steps: If passed, new recipe steps
     :param ingredients: If passed, new recipe ingredients
+    :param allowed_groups: List of user groups allowed to watch this recipe
     :param session: SQLAlchemy AsyncSession object
     :param current_user: User information object.
     :return:
@@ -443,10 +467,13 @@ async def create_new_recipe(
     # adding categories to recipe. if ingredient don't exist, first create new ingredient
     for category in categories:
         new_recipe.categories.append(await get_category_or_create_if_not_exists(category, session))
-    new_recipe.allowed_groups.extend([
-        await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session),
-        await get_group_model_or_create_if_not_exists(DEFAULT_USER_GROUP_NAME, session=session)
-    ])
+
+    if allowed_groups:
+        group_models = []
+        for group in allowed_groups:
+            group_models.append(get_group_model_or_create_if_not_exists(group, session))
+        new_recipe.extend([*group_models, await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session)])
+
     filename = build_full_path(f"{current_user.username}/recipes/{new_recipe.title}", image)
     S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
     new_recipe.image = filename
@@ -465,6 +492,7 @@ async def update_recipe(
         categories: Optional[str],
         steps: Optional[str],
         ingredients: Optional[str],
+        allowed_groups: Optional[str],
         session: AsyncSession,
         current_user: UserModel,
 ) -> None:
@@ -481,6 +509,7 @@ async def update_recipe(
     :param categories: If passed, new recipe categories
     :param steps: If passed, new recipe steps
     :param ingredients: If passed, new recipe ingredients
+    :param allowed_groups: List of user groups allowed to watch this recipe
     :param session: SQLAlchemy AsyncSession object
     :param current_user: User information object.
     :return: None
@@ -510,6 +539,10 @@ async def update_recipe(
     if categories:
         categories = parse_categories_to_list(categories)
         await update_recipe_categories(new_categories=categories, recipe=recipe, session=session)
+
+    if allowed_groups:
+        allowed_groups = eval(allowed_groups)
+        await update_recipe_groups(allowed_groups, recipe=recipe, session=session)
 
 
 async def get_category_image(category: str, session: AsyncSession) -> Optional[str]:

@@ -118,6 +118,7 @@ async def create_recipe(
         categories: str = Form(),
         steps: str = Form(),
         ingredients: str = Form(),
+        allowed_groups: Optional[str] = Form(None),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: UserModel = Depends(get_admin_by_token)):
     """
@@ -131,6 +132,7 @@ async def create_recipe(
     :param categories: Recipe categories.
     :param steps: Recipe steps.
     :param ingredients: Recipe ingredients.
+    :param allowed_groups: List of user groups allowed to watch this recipe
     :param session: SQLAlchemy AsyncSession object.
     :param current_user: User information object.
     :return: Response with status and added recipe id.
@@ -143,6 +145,7 @@ async def create_recipe(
                                     categories=categories,
                                     steps=steps,
                                     ingredients=ingredients,
+                                    allowed_groups=allowed_groups,
                                     session=session,
                                     current_user=current_user)
 
@@ -158,6 +161,7 @@ async def update_recipe(
         categories: Optional[str] = Form(None),
         steps: Optional[str] = Form(None),
         ingredients: Optional[str] = Form(None),
+        allowed_groups: Optional[str] = Form(None),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
         current_user: UserModel = Depends(get_user_by_token),
 ):
@@ -173,6 +177,7 @@ async def update_recipe(
     :param categories: New recipe categories. (Optional, model field categories will be changed if value passed).
     :param steps: New recipe steps. (Optional, model field steps will be changed if value passed).
     :param ingredients: New recipe ingredients. (Optional, model field ingredients will be changed if value passed).
+    :param allowed_groups: List of user groups allowed to watch this recipe. (Optional, model field ingredients will be changed if value passed).
     :param session: SQLAlchemy AsyncSession object.
     :param current_user: User information object.
     :return: Response with status
@@ -186,6 +191,7 @@ async def update_recipe(
                                     categories=categories,
                                     steps=steps,
                                     ingredients=ingredients,
+                                    allowed_groups=allowed_groups,
                                     session=session,
                                     current_user=current_user)
 
