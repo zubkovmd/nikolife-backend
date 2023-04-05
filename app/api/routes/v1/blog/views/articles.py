@@ -10,7 +10,7 @@ from starlette import status
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetArticlesResponseModel
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.utility import get_raw_filename
+from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import ADMIN_GROUP_NAME
 from app.database.models.base import Users, Articles
 from app.utils import S3Manager
@@ -37,7 +37,7 @@ async def put_article_view(
     """
     async with session.begin():
         current_user = await get_user_by_id(user_id=current_user.id, session=session)
-        filename = f"{current_user.username}/blog/{get_raw_filename(image.filename)}"
+        filename = build_full_path(f"{current_user.username}/blog", image)
         S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
 
         new_article = Articles(
@@ -85,7 +85,7 @@ async def update_article_view(
         article.subtitle = subtitle
         article.text = text
         if image:
-            filename = f"{current_user.username}/blog/{get_raw_filename(image.filename)}"
+            filename = build_full_path(f"{current_user.username}/blog", image)
             S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
             article.image = filename
         return DefaultResponse(status_code=200, detail="Статья обновлена")

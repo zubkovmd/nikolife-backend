@@ -11,7 +11,7 @@ from starlette import status
 
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.utils.service_models import UserModel
-from app.api.routes.v1.utils.utility import get_raw_filename
+from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import ADMIN_GROUP_NAME, DEFAULT_USER_GROUP_NAME
 from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import (
@@ -447,7 +447,7 @@ async def create_new_recipe(
         await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session),
         await get_group_model_or_create_if_not_exists(DEFAULT_USER_GROUP_NAME, session=session)
     ])
-    filename = f"{current_user.username}/recipes/{new_recipe.title}/{get_raw_filename(image.filename)}"
+    filename = build_full_path(f"{current_user.username}/recipes/{new_recipe.title}", image)
     S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
     new_recipe.image = filename
     session.add(new_recipe)
@@ -489,7 +489,7 @@ async def update_recipe(
     if title:
         recipe.title = title
     if image:
-        filename = f"{current_user.username}/recipes/{recipe.title}/{get_raw_filename(image.filename)}"
+        filename = build_full_path(f"{current_user.username}/recipes/{recipe.title}", image)
         S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
         recipe.image = filename
     if time:

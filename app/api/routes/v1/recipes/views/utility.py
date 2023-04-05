@@ -21,9 +21,9 @@ from app.api.routes.v1.recipes.utility_classes import (
     UpdateCompilationRequestModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
 from app.api.routes.v1.users.utils import get_user_by_id
-from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token_or_none
+from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
-from app.api.routes.v1.utils.utility import get_raw_filename
+from app.api.routes.v1.utils.utility import build_full_path
 from app.database import DatabaseManagerAsync
 from app.database.models.base import (
     RecipeCategories,
@@ -151,7 +151,7 @@ async def create_recipes_compilation_view(
         stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
         recipes = (await session.execute(stmt)).scalars().all()
         # Load compilation image to s3
-        filename = f"{current_user.username}/compilations/{request.title}/{get_raw_filename(request.image.filename)}"
+        filename = build_full_path(f"{current_user.username}/compilations/{request.title}", request.image)
         S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
         # Add new compilation
         session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
@@ -190,7 +190,7 @@ async def update_recipes_compilation_view(
         compilation.name = request.title
         if request.image:
             # Load compilation image to s3
-            filename = f"{current_user.username}/compilations/{request.title}/{get_raw_filename(request.image.filename)}"
+            filename = build_full_path(f"{current_user.username}/compilations/{request.title}", request.image)
             S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
             compilation.image=filename
         await session.commit()

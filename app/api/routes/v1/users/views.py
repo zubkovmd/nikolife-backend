@@ -19,7 +19,7 @@ from app.api.routes.v1.users.models import RegisterRequestModel
 from app.api.routes.v1.users.utils import get_user_by_id, get_user_by_username
 from app.api.routes.v1.utils.auth import get_user_by_token, get_password_hash
 from app.api.routes.v1.utils.service_models import UserModel
-from app.api.routes.v1.utils.utility import get_raw_filename
+from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import DEFAULT_USER_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import Users
@@ -159,7 +159,7 @@ async def update_user_view(username=Form(default=None),
         if info:
             user.info = info
         if image:
-            filename = f"{user.email}/avatar/{get_raw_filename(image.filename)}"
+            filename = build_full_path(f"{user.email}/avatar", image)
             S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
             user.image = filename
         return DefaultResponse(detail="Информация о пользователе обновлена")

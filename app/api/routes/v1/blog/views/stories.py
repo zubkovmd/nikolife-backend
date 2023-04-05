@@ -10,7 +10,7 @@ from starlette import status
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetStoriesResponseModel
 from app.api.routes.v1.blog.utils import get_last_stories
-from app.api.routes.v1.utils.utility import get_raw_filename
+from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import MAX_STORIES_COUNT
 from app.database.models.base import Story, StoryItem
 from app.utils import S3Manager
@@ -61,11 +61,11 @@ async def put_story_view(
     """
     async with session.begin():
         new_story = Story(title=title)
-        thumbnail_filename = f"{current_user.username}/stories/{title}/{get_raw_filename(thumbnail.filename)}"
+        thumbnail_filename = build_full_path(f"{current_user.username}/stories/{title}", thumbnail)
         S3Manager.get_instance().send_image_shaped(image=thumbnail, base_filename=thumbnail_filename)
         new_story.thumbnail = thumbnail_filename
         for image in images:
-            story_image_filename = f"{current_user.username}/stories/{title}/{get_raw_filename(image.filename)}"
+            story_image_filename = build_full_path(f"{current_user.username}/stories/{title}", image)
             S3Manager.get_instance().send_image_shaped(image=image, base_filename=story_image_filename)
             new_story.story_items.append(StoryItem(image=story_image_filename))
         session.add(new_story)
