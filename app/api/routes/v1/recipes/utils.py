@@ -471,8 +471,8 @@ async def create_new_recipe(
     if allowed_groups:
         group_models = []
         for group in allowed_groups:
-            group_models.append(get_group_model_or_create_if_not_exists(group, session))
-        new_recipe.extend([*group_models, await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session)])
+            group_models.append(await get_group_model_or_create_if_not_exists(group, session))
+        new_recipe.allowed_groups = [*group_models, await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session)]
 
     filename = build_full_path(f"{current_user.username}/recipes/{new_recipe.title}", image)
     S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
