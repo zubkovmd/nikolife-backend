@@ -8,6 +8,8 @@ ADMIN_GROUP_NAME = "admin"
 DEFAULT_USER_GROUP_NAME = "user"
 # not authenticated user group
 NOT_AUTHENTICATED_GROUP_NAME = "no_auth"
+# paid user group
+PAYED_GROUP_NAME = "payed"
 # max returned stories count
 MAX_STORIES_COUNT = 10
 # max returned stories count

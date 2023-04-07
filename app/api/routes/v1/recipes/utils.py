@@ -12,7 +12,7 @@ from starlette import status
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
-from app.constants import ADMIN_GROUP_NAME, DEFAULT_USER_GROUP_NAME
+from app.constants import ADMIN_GROUP_NAME, PAYED_GROUP_NAME
 from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import (
     CreateRecipeIngredientRequestModel,
@@ -325,8 +325,8 @@ async def select_recipes_and_filter_them(
         .options(selectinload(Recipes.allowed_groups))
         .options(selectinload(Recipes.liked_by))
     )
-    if not ADMIN_GROUP_NAME in user_groups:
-        # stmt = stmt.filter(Recipes.allowed_groups.any(Groups.name.in_([group for group in user_groups])))
+    if PAYED_GROUP_NAME not in user_groups:
+        stmt = stmt.filter(Recipes.allowed_groups.any(Groups.name.notlike(PAYED_GROUP_NAME)))
         pass
 
     # If include_categories passed, then filter recipes where categories intersect at least with one of these
