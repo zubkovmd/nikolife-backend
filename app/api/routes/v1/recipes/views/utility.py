@@ -24,6 +24,7 @@ from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
+from app.constants import PAYED_GROUP_NAME
 from app.database import DatabaseManagerAsync
 from app.database.models.base import (
     RecipeCategories,
