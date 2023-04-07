@@ -7,12 +7,13 @@ from typing import Union
 from fastapi import Depends, UploadFile, Form, File, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserAuthResponse
+from app.api.routes.default_response_models import DefaultResponse, UserRequestResponse, User, UserAuthResponse, \
+    UsersRequestResponse
 from app.api.routes.v1.groups.router import router as groups_router
 from app.api.routes.v1.users.models import RegisterRequestModel
-from app.api.routes.v1.users.views import get_user_by_id_view, register_user_view, delete_user_view, \
-    update_user_view, authenticate_by_provider_view
-from app.api.routes.v1.utils.auth import get_user_by_token
+from app.api.routes.v1.users.views import register_user_view, delete_user_view, \
+    update_user_view, authenticate_by_provider_view, get_all_users_view, get_user_by_id_view
+from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
 from app.utils import S3Manager
@@ -37,6 +38,21 @@ async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRe
     return UserRequestResponse(detail="Пользователь найден", user=User(**user_dict))
 
 
+@router.get("/get_all", response_model=UsersRequestResponse, dependencies=[Depends(get_admin_by_token)])
+async def get_all_users(
+    session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+) -> UsersRequestResponse:
+    """
+    Returns all users
+
+    :return: Response with user object.
+    """
+    users = await get_all_users_view(
+        session=session
+    )
+    return users
+
+
 @router.get(
     "/by_id/{user_id}",
     response_model=Union[UserRequestResponse, DefaultResponse],
@@ -52,7 +68,8 @@ async def get_user_by_id(
     :param session: FastAPI dependency, SQLAlchemy session object.
     :return: Response with user object
     """
-    return await get_user_by_id_view(user_id=user_id, session=session)
+    user = await get_user_by_id_view(user_id=user_id, session=session)
+    return user
 
 
 @router.post("/", response_model=DefaultResponse)
@@ -108,6 +125,7 @@ async def update_user(username=Form(default=None),
                       email=Form(default=None),
                       name=Form(default=None),
                       info=Form(default=None),
+                      groups=Form(default=None),
                       image: UploadFile = File(default=None),
                       session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
                       current_user: UserModel = Depends(get_user_by_token),
@@ -119,6 +137,7 @@ async def update_user(username=Form(default=None),
     :param email: new email (optional).
     :param name: new name (optional).
     :param info: new info (optional).
+    :param groups: new user groups (optional).
     :param image: new image (optional).
     :param session: SQLAlchemy AsyncSession object.
     :param current_user: User information object.
@@ -129,6 +148,7 @@ async def update_user(username=Form(default=None),
         email=email,
         name=name,
         info=info,
+        groups=groups,
         image=image,
         session=session,
         current_user=current_user

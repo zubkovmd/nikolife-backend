@@ -1,9 +1,15 @@
 """
 Module contains sqlalchemy models for entire service.
 """
-from sqlalchemy import Column, Integer, String, DateTime, text, ForeignKey, Table, Float
-from sqlalchemy.orm import declarative_base, relationship
+from typing import Optional, TypeVar, List
 
+from fastapi import HTTPException
+import sqlalchemy
+from sqlalchemy import Column, Integer, String, DateTime, text, ForeignKey, Table, Float
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import declarative_base, relationship, selectinload
+from starlette import status
 
 Base = declarative_base()
 
@@ -76,6 +82,12 @@ association_ingredients_groups = Table(
 )
 
 
+UsersTypeVar = TypeVar("UsersTypeVar", bound="Users")
+RecipesTypeVar = TypeVar("RecipesTypeVar", bound="Recipes")
+ChatMessagesTypeVar = TypeVar("ChatMessagesTypeVar", bound="ChatMessages")
+ArticlesTypeVar = TypeVar("ArticlesTypeVar", bound="Articles")
+
+
 class Users(Base):
     """
     User model.
@@ -118,19 +130,95 @@ class Users(Base):
     """path to user image in s3-compatible service. (i used minio, result like 'USERNAME/IMAGE_NAME.jpg')"""
     groups = relationship("Groups", back_populates="users", secondary=association_users_groups)
     """List of user groups"""
-    messages_send = relationship("ChatMessages", foreign_keys="ChatMessages.sender_id", back_populates="sender",
-                                 cascade="all, delete")
+    messages_send: List[ChatMessagesTypeVar] = relationship("ChatMessages", foreign_keys="ChatMessages.sender_id",
+                                                            back_populates="sender", cascade="all, delete")
     """List of messages send by user"""
-    messages_received = relationship("ChatMessages", foreign_keys="ChatMessages.receiver_id", back_populates="receiver",
-                                     cascade="all, delete")
+    messages_received: List[ChatMessagesTypeVar] = relationship("ChatMessages", foreign_keys="ChatMessages.receiver_id",
+                                                                back_populates="receiver", cascade="all, delete")
     """List of messages received by user"""
-    created_recipes = relationship("Recipes", cascade="all, delete", passive_deletes=True, lazy="select")
+    created_recipes: List[RecipesTypeVar] = relationship("Recipes", cascade="all, delete", passive_deletes=True, lazy="select")
     """List of recipes created by user"""
-    liked_recipes = relationship("Recipes", secondary=association_recipes_likes, back_populates="liked_by",
-                                 cascade="all, delete")
+    liked_recipes: List[RecipesTypeVar] = relationship("Recipes", secondary=association_recipes_likes, 
+                                                       back_populates="liked_by", cascade="all, delete")
     """List of recipes liked by user"""
-    articles = relationship("Articles", cascade="all, delete", passive_deletes=True)
+    articles: List[ArticlesTypeVar] = relationship("Articles", cascade="all, delete", passive_deletes=True)
     """List of articles created by user"""
+
+    @hybrid_property
+    def group_names(self):
+        return [group.name for group in self.groups]
+
+    @classmethod
+    async def get_by_id(cls, user_id: int, session: AsyncSession, join_tables: list = ()) -> UsersTypeVar:
+        """
+        Method returns user object from database with search by id. If user with this id does not exist, then throws
+        404_NOT_FOUND exception.
+
+        :param user_id: user id to search.
+        :param session: SQLAlchemy AsyncSession object.
+        :param join_tables: what tables should be joined to user object.
+        :return: User object.
+        """
+        stmt = (
+            sqlalchemy.select(Users)
+            .filter(Users.id == user_id)
+            .limit(1)
+        )
+        if join_tables:
+            for table in join_tables:
+                stmt = stmt.options(selectinload(table))
+        resp = await session.execute(stmt)
+        user = resp.scalars().first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        return user
+
+    @classmethod
+    async def get_all(cls, session: AsyncSession, join_tables: Optional[list] = None) -> List[UsersTypeVar]:
+        """
+        Method returns user object from database with search by id. If user with this id does not exist, then throws
+        404_NOT_FOUND exception.
+
+        :param session: SQLAlchemy AsyncSession object.
+        :param join_tables: what tables should be joined to user object.
+        :return: User object.
+        """
+        stmt = (
+            sqlalchemy.select(Users)
+            .options(selectinload(Users.groups))
+        )
+        if join_tables:
+            stmt = stmt.options(selectinload(*join_tables))
+        resp = await session.execute(stmt)
+        user = resp.scalars().all()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        return user
+
+    @classmethod
+    async def get_by_username(cls, session: AsyncSession, username, join_tables: Optional[list] = None) -> UsersTypeVar:
+        """
+        Method returns user object from database with search by id. If user with this id does not exists, then throws
+        404_NOT_FOUND exception.
+
+        :param username:  username to search.
+        :param session: SQLAlchemy AsyncSession object.
+        :param join_tables: what tables should be joined to user object.
+        :return: User object.
+        """
+        stmt = (
+            sqlalchemy.select(Users)
+            .where(Users.username == username)
+            .limit(1)
+        )
+        if join_tables is not None:
+            for table in join_tables:
+                stmt = stmt.options(selectinload(table))
+        response = await session.execute(stmt)
+        user: Users = response.scalars().one()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        return user
 
     def __str__(self):
         """string represent of model"""
@@ -158,6 +246,7 @@ class Groups(Base):
     """group name"""
     users = relationship("Users", back_populates="groups", secondary=association_users_groups)
     """users in this group"""
+
 
     def __str__(self):
         """string represent of model"""
@@ -593,6 +682,34 @@ class Recipes(Base):
     """Users model link of user that creates this recipe"""
     liked_by = relationship("Users", secondary=association_recipes_likes, back_populates="liked_recipes")
     """Users model links of users that likes this recipe"""
+
+    @classmethod
+    async def get_by_id(cls, recipe_id: int, session: AsyncSession, join_tables: list = ()):
+        """
+            Method search recipe by passed id. If recipe not found, then it throws
+            404_NOT_FOUND exception
+
+            :param recipe_id: id of recipe.
+            :param session: SQLAlchemy AsyncSession object.
+            :return: Found recipe.
+            """
+        stmt = (
+            sqlalchemy.select(Recipes)
+            .where(Recipes.id == recipe_id)
+            .limit(1)
+        )
+        # stmt.options(selectinload(Ingredients.groups))
+        if join_tables:
+            for table in join_tables:
+                if type(table) in [tuple, set, list]:
+                    stmt = stmt.options(selectinload(*table))
+                else:
+                    stmt = stmt.options(selectinload(table))
+        resp = await session.execute(stmt)
+        recipe: Recipes = resp.scalars().first()
+        if not recipe:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Рецепт не найден")
+        return recipe
 
     def __str__(self):
         """string represent of model"""

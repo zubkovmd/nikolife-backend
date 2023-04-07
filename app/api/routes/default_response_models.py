@@ -3,7 +3,7 @@ Module that contains default FastAPI response models.
 Check https://fastapi.tiangolo.com/tutorial/response-model/.
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -32,11 +32,18 @@ class User(BaseModel):
     email: str
     name: str
     info: str
+    groups: Optional[List[str]]
+    id: Optional[int]
 
 
 class UserRequestResponse(DefaultResponse):
     """Response with user info"""
     user: User
+
+
+class UsersRequestResponse(DefaultResponse):
+    """Response with user info"""
+    users: List[User]
 
 
 class UserAuthResponse(DefaultResponse):

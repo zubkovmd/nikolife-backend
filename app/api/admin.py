@@ -11,7 +11,6 @@ from sqladmin import Admin, ModelView
 from sqladmin.authentication import AuthenticationBackend
 from starlette.requests import Request
 
-from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import authenticate_user, create_access_token
 from app.config import settings
 from app.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ADMIN_GROUP_NAME
@@ -28,7 +27,7 @@ class MyBackend(AuthenticationBackend):
         async with DatabaseManagerAsync.get_instance().get_session() as session:
             form = await request.form()
             user = await authenticate_user(form["username"], form["password"])
-            user = await get_user_by_id(user_id=user.id, session=session, join_tables=["groups"])
+            user = await Users.get_by_id(user_id=user.id, session=session, join_tables=[Users.groups])
             if ADMIN_GROUP_NAME not in [group.name for group in user.groups]:
                 raise HTTPException(status_code=401, detail="Not admin")
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

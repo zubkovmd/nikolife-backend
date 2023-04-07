@@ -1,7 +1,8 @@
 """
 Utility views for recipe routes
 """
-
+import datetime
+import time
 from typing import List, Optional
 
 import sqlalchemy
@@ -20,7 +21,6 @@ from app.api.routes.v1.recipes.utility_classes import (
     GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel, RecipeOneCompilationResponseModel,
     UpdateCompilationRequestModel)
 from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
-from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import get_user_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
@@ -317,15 +317,19 @@ async def toggle_recipe_like_view(
     """
     async with session.begin():
         # First we needs to get mapped user object from database
-        current_user = await get_user_by_id(session=session, user_id=current_user.id, join_tables=[Users.liked_recipes])
+        t = datetime.datetime.now()
+        current_user = await Users.get_by_id(session=session, user_id=current_user.id, join_tables=[Users.liked_recipes])
         # Then we need to get recipe object
-        recipe = await get_recipe_by_id(recipe_id=recipe.recipe_id, session=session)
+        t = datetime.datetime.now()
+        recipe = await Recipes.get_by_id(recipe_id=recipe.recipe_id, session=session)
         # Now if recipe is not liked, then we should add it to likes
         if recipe not in current_user.liked_recipes:
+            t = datetime.datetime.now()
             current_user.liked_recipes.append(recipe)
             return DefaultResponse(detail="Рецепт добавлен в избранное")
         # If recipe already liked, then we should delete it from likes
         else:
+            t = datetime.datetime.now()
             current_user.liked_recipes.remove(recipe)
             return DefaultResponse(detail="Рецепт удален из избранного")
 

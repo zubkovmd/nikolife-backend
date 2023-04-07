@@ -14,7 +14,6 @@ from app.api.routes.v1.groups.utils import (
     get_group_model_or_create_if_not_exists)
 from app.api.routes.v1.users.models import GroupRequestModel, GroupChangeRequestModel, \
     AddUserToGroupRequestModel
-from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.auth import check_user_is_in_group
 from app.database.models.base import Users, Groups
 
@@ -83,7 +82,7 @@ async def add_user_to_group_view(
     :return: Response with status
     """
     async with session.begin():
-        user: Users = await get_user_by_id(user_id=group_model.user_id, session=session, join_tables=[Users.groups])
+        user: Users = await Users.get_by_id(user_id=group_model.user_id, session=session, join_tables=[Users.groups])
         try:
             # check if user already in this group, then throws 409_CONFLICT exception.
             # this method throws 401 when user not in group
@@ -114,7 +113,7 @@ async def remove_user_from_group_view(
     """
     async with session.begin():
         # first we get user with its groups from database
-        user: Users = await get_user_by_id(user_id=group_model.user_id, session=session, join_tables=[Users.groups])
+        user: Users = await Users.get_by_id(user_id=group_model.user_id, session=session, join_tables=[Users.groups])
         # we need to check is user in this group. if not, then it throws 409
         await check_user_is_in_group(group_name=group_model.group_name, user=user)
         # now search group object and remove it from user groups

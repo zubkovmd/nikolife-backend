@@ -9,10 +9,10 @@ from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetArticlesResponseModel
-from app.api.routes.v1.users.utils import get_user_by_id
 from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import ADMIN_GROUP_NAME
 from app.database.models.base import Users, Articles
+import app.database.models.base as schema
 from app.utils import S3Manager
 
 
@@ -22,7 +22,7 @@ async def put_article_view(
         subtitle: str,
         text: str,
         session: AsyncSession,
-        current_user: Users,
+        current_user: schema.Users,
 ) -> DefaultResponse:
     """
     View that creates new article
@@ -36,7 +36,7 @@ async def put_article_view(
     :return: DefaultResponse
     """
     async with session.begin():
-        current_user = await get_user_by_id(user_id=current_user.id, session=session)
+        current_user = await Users.get_by_id(user_id=current_user.id, session=session)
         filename = build_full_path(f"{current_user.username}/blog", image)
         S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
 
