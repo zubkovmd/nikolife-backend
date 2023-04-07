@@ -401,6 +401,7 @@ async def get_ingredients_groups(
 async def find_all(
         string_to_find: str,
         max_returns: int = 5,
+        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
 ):
     """
@@ -410,9 +411,15 @@ async def find_all(
     :param string_to_find: String for search.
     :param max_returns: Maximum returned rows for each model.
     :param session: SQLAlchemy AsyncSession object.
+    :param current_user: User information object.
     :return: Response with found objects for each model.
     """
-    return await find_all_view(string_to_find=string_to_find, max_returns=max_returns, session=session)
+    return await find_all_view(
+        string_to_find=string_to_find,
+        max_returns=max_returns,
+        current_user=current_user,
+        session=session,
+    )
 
 
 @router.get("/get_recipes_by_ingredient", response_model=GetRecipesResponseModel)

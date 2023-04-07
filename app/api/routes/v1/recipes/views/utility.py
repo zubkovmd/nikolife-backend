@@ -329,7 +329,7 @@ async def toggle_recipe_like_view(
             return DefaultResponse(detail="Рецепт удален из избранного")
 
 
-async def search_by_field(string_to_find, max_returns, model, field, session):
+async def search_by_field(string_to_find, max_returns, model, field, session, join_tables=()):
     """
     Utility method that search in selected field in selected model for entries. If there are full compare, then
     method will return only fully compared rows, else it will return **max_returns** rows with substring compares.
@@ -338,10 +338,14 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
     :param max_returns: Max returns for semi-compared rows.
     :param model: SQLAlchemy model for search.
     :param field: SQLAlchemy model field for search.
+    :param join_tables: Tables that should be joined
     :param session: SQLAlchemy AsyncSession object.
     :return: List of found objects.
     """
     search_by_full_compare = sqlalchemy.select(model).where(field == string_to_find).limit(1)
+    if join_tables:
+        for table in join_tables:
+            search_by_full_compare = search_by_full_compare.options(selectinload(table))
     resp = await session.execute(search_by_full_compare)
     resp = resp.scalars().first()
     if resp:
@@ -349,6 +353,9 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
     else:
         search_by_semi_compare = sqlalchemy.select(model).filter(
             func.lower(field).like(f"{string_to_find.lower()}%")).limit(max_returns)
+        if join_tables:
+            for table in join_tables:
+                search_by_semi_compare = search_by_semi_compare.options(selectinload(table))
         resp = await session.execute(search_by_semi_compare)
         resp = resp.scalars().all()
         if resp:
@@ -359,6 +366,7 @@ async def search_by_field(string_to_find, max_returns, model, field, session):
 
 async def find_all_view(
         string_to_find: str,
+        current_user: Optional[UserModel],
         max_returns: int = 5,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
 ) -> FindResponseModel:
@@ -369,6 +377,7 @@ async def find_all_view(
 
     :param string_to_find: String for search.
     :param max_returns: Maximum returned rows for each model.
+    :param current_user: User information object.
     :param session: SQLAlchemy AsyncSession object.
     :return: Response with found objects for each model.
     """
@@ -376,8 +385,15 @@ async def find_all_view(
         response_model = FindResponseModel(recipes=[], ingredients=[], categories=[])
 
         # FIND IN RECIPES
-        search_recipes: List[Recipes] = await search_by_field(string_to_find=string_to_find, max_returns=max_returns,
-                                                              model=Recipes, field=Recipes.title, session=session)
+        search_recipes: List[Recipes] = await search_by_field(
+            string_to_find=string_to_find,
+            max_returns=max_returns,
+            model=Recipes,
+            field=Recipes.title,
+            join_tables=[Recipes.allowed_groups],
+            session=session)
+        if not current_user or PAYED_GROUP_NAME not in current_user.groups:
+            search_recipes = list(filter(lambda x: PAYED_GROUP_NAME not in [group.name for group in x.allowed_groups], search_recipes))
         response_model.recipes = [RecipeFindResponseModel(title=i.title, recipe_id=i.id) for i in search_recipes]
         # FIND IN CATEGORIES
         searh_categories: List[RecipeCategories] = await search_by_field(string_to_find=string_to_find,
