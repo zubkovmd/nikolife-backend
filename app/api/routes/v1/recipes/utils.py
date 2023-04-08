@@ -321,13 +321,15 @@ async def select_recipes_and_filter_them(
     # First make base query
     stmt = (
         select(Recipes)
-        .where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
         .options(selectinload(Recipes.allowed_groups))
         .options(selectinload(Recipes.liked_by))
     )
     if PAYED_GROUP_NAME not in user_groups and ADMIN_GROUP_NAME not in user_groups:
         stmt = stmt.filter(Recipes.allowed_groups.any(Groups.name.notlike(PAYED_GROUP_NAME)))
         pass
+
+    if ADMIN_GROUP_NAME not in user_groups:
+        stmt = stmt.where(Recipes.image.isnot(None))  # some recipes do not have images, so filter them
 
     # If include_categories passed, then filter recipes where categories intersect at least with one of these
     if include_categories:
