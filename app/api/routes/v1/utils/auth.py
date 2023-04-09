@@ -116,6 +116,7 @@ async def get_user_by_token(
         token: str = Depends(OAuth2PasswordBearer(tokenUrl="token")),
 ) -> UserModel:
     """
+    # TODO: merge with get_user_by_token_or_none and get_admin_by_token methods
     Function for FastAPI dependency that receives bearer token with request headers and returns user if token is valid.
     Also checks required group in user groups. Default group to check is **DEFAULT_USER_GROUP_NAME**
 

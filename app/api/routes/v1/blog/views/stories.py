@@ -5,7 +5,6 @@ from typing import List
 import sqlalchemy
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetStoriesResponseModel
