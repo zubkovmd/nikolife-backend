@@ -6,7 +6,7 @@ import time
 from typing import List, Optional
 
 import sqlalchemy
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -303,8 +303,8 @@ async def get_ingredients_groups_view(session: AsyncSession) -> GetIngredientGro
 
 async def toggle_recipe_like_view(
         recipe: RecipeLikesRequestModel,
-        current_user: UserModel = Depends(get_user_by_token),
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+        current_user: UserModel,
+        session: AsyncSession
 ) -> DefaultResponse:
     """
     This view is set's recipe to 'liked' state request user did not like it before, if recipe is already liked,
@@ -372,8 +372,8 @@ async def search_by_field(string_to_find, max_returns, model, field, session, jo
 async def find_all_view(
         string_to_find: str,
         current_user: Optional[UserModel],
+        session: AsyncSession,
         max_returns: int = 5,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
 ) -> FindResponseModel:
     """
     Method will search string_to_find in all searchable models: recipes, ingredients, recipe categories. First,

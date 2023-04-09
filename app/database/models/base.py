@@ -247,7 +247,6 @@ class Groups(Base):
     users = relationship("Users", back_populates="groups", secondary=association_users_groups)
     """users in this group"""
 
-
     def __str__(self):
         """string represent of model"""
         return self.name

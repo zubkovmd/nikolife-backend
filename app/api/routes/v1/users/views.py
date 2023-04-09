@@ -9,7 +9,7 @@ from typing import Optional, List
 
 import requests
 import sqlalchemy
-from fastapi import Depends, HTTPException, Form, UploadFile, File
+from fastapi import HTTPException, Form, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -71,7 +71,7 @@ async def get_all_users_view(session: AsyncSession) -> UsersRequestResponse:
 async def authenticate_by_provider_view(
         token: str,
         provider: AvailableAuthProviders,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+        session: AsyncSession,
 ) -> UserAuthResponse:
     """
     View gets user object by passed token with selected auth provider
@@ -100,7 +100,7 @@ async def authenticate_by_provider_view(
 
 async def register_user_view(
         user: RegisterRequestModel,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+        session: AsyncSession
 ) -> DefaultResponse:
     """
     View for register a new user route (POST .../users/)
@@ -126,8 +126,8 @@ async def register_user_view(
 
 
 async def delete_user_view(
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token)
+        session: AsyncSession,
+        current_user: UserModel
 ) -> DefaultResponse:
     """
     View for delete user route.
@@ -150,14 +150,15 @@ async def delete_user_view(
         return DefaultResponse(detail=f"Пользователь с ником '{user_to_delete.username}' удален из приложения")
 
 
-async def update_user_view(username=Form(default=None),
-                           email=Form(default=None),
-                           name=Form(default=None),
-                           info=Form(default=None),
-                           groups=Form(default=None),
-                           image: UploadFile = File(default=None),
-                           session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-                           current_user: UserModel = Depends(get_user_by_token),
+async def update_user_view(
+        session: AsyncSession,
+        current_user: UserModel,
+        username=Form(default=None),
+        email=Form(default=None),
+        name=Form(default=None),
+        info=Form(default=None),
+        groups=Form(default=None),
+        image: UploadFile = File(default=None),
                            ):
     """
     View for update user information router

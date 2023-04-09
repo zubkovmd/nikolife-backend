@@ -1,7 +1,7 @@
 """Default views for recipes routes"""
 from typing import List, Optional
 
-from fastapi import Depends, HTTPException, UploadFile
+from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -28,8 +28,8 @@ async def get_recipes_view(
         exclude_groups: Optional[List[str]],
         include_categories: Optional[List[str]],
         compilation: Optional[str],
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none),
+        session: AsyncSession,
+        current_user: Optional[UserModel],
 ) -> GetRecipesResponseModel:
     """
     View for recipes request
@@ -61,8 +61,8 @@ async def get_recipes_view(
 
 async def get_recipes_by_ingredient_view(
         ingredient_name: str,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        session: AsyncSession,
+        current_user: UserModel,
 ) -> GetRecipesResponseModel:
     """
     View for recipes search by ingredient
@@ -87,8 +87,8 @@ async def get_recipes_by_ingredient_view(
 
 async def get_recipes_by_category_view(
         category_name: str,
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        session: AsyncSession,
+        current_user: UserModel,
 ) -> GetRecipesResponseModel:
     """
     View for recipes search by category
@@ -112,8 +112,8 @@ async def get_recipes_by_category_view(
 
 
 async def get_liked_recipes_view(
-        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token)
+        session: AsyncSession,
+        current_user: UserModel
 ) -> GetRecipesResponseModel:
     """
     View for search only liked recipes
