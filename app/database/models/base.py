@@ -24,6 +24,7 @@ association_users_groups = Table(
     Base.metadata,
     Column("users_id", ForeignKey("users.id")),
     Column("groups_id", ForeignKey("groups.id")),
+    Column("expiration_time", DateTime(timezone=True), nullable=True)
 )
 
 """
