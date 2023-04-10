@@ -20,12 +20,10 @@ from app.api.routes.v1.recipes.utility_classes import (
     RecipeCompilationResponseModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
     GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel, RecipeOneCompilationResponseModel,
     UpdateCompilationRequestModel)
-from app.api.routes.v1.recipes.utils import get_recipe_by_id, get_category_image
-from app.api.routes.v1.utils.auth import get_user_by_token
+from app.api.routes.v1.recipes.utils import get_category_image
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import PAYED_GROUP_NAME
-from app.database import DatabaseManagerAsync
 from app.database.models.base import (
     RecipeCategories,
     Ingredients,

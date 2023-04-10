@@ -12,7 +12,7 @@ from starlette import status
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
-from app.constants import ADMIN_GROUP_NAME, PAYED_GROUP_NAME
+from app.constants import ADMIN_GROUP_NAME, PAYED_GROUP_NAME, NOT_AUTHENTICATED_GROUP_NAME
 from app.utils import S3Manager
 from app.api.routes.v1.recipes.utility_classes import (
     CreateRecipeIngredientRequestModel,
@@ -21,8 +21,6 @@ from app.api.routes.v1.recipes.utility_classes import (
     GetRecipesRecipeResponseModel)
 from app.database.models.base import (
     Ingredients,
-    IngredientsGroups,
-    RecipeDimensions,
     RecipeIngredients,
     Recipes,
     RecipeCategories,
@@ -30,110 +28,6 @@ from app.database.models.base import (
     Users,
     Groups,
     RecipeCompilations)
-
-
-async def get_ingredient_group_or_create_if_not_exists(name: str, session) -> IngredientsGroups:
-    """
-    Method return ingredient group by passed name. If group does not exist, then it will be created.
-    For additional info check app.database.models.base -> IngredientsGroups.
-
-    :param name: Group name.
-    :param session: SQLAlchemy AsyncSession object.
-    :return: Ingredient group mapped object.
-    """
-    stmt = sqlalchemy.select(IngredientsGroups).where(IngredientsGroups.name == name)
-    response = await session.execute(stmt)
-    found_group = response.scalars().first()
-    if found_group:
-        return found_group
-    else:
-        new_group = IngredientsGroups(name=name)
-        session.add(new_group)
-        return new_group
-
-
-async def get_ingredient_model_or_create_if_not_exists(
-        ingredient: CreateRecipeIngredientRequestModel,
-        session: AsyncSession
-) -> Ingredients:
-    """
-    Method return ingredient by passed name. If ingredient does not exist, then it will be created.
-    Ingredient groups will be added too.
-    For additional info check app.database.models.base -> Ingredients.
-
-    :param ingredient: ingredient name.
-    :param session: SQLAlchemy AsyncSession object.
-    :return: Ingredient group mapped object.
-    """
-    stmt = sqlalchemy.select(Ingredients).where(Ingredients.name == ingredient.name)
-    response = await session.execute(stmt)
-    found_ingredient = response.scalars().first()
-    if found_ingredient:
-        return found_ingredient
-    new_ingredient_model = Ingredients(name=ingredient.name.lower().capitalize())
-    for group in ingredient.groups:
-        group_model = await get_ingredient_group_or_create_if_not_exists(group, session)
-        new_ingredient_model.groups.append(group_model)
-    session.add(new_ingredient_model)
-    return new_ingredient_model
-
-
-async def get_dimension_model_or_create_if_not_exists(dimension: str, session) -> RecipeDimensions:
-    """
-    Method return dimension by passed name. If dimension does not exist, then it will be created.
-    For additional info check app.database.models.base -> RecipeDimensions.
-
-    :param dimension: Dimension name.
-    :param session: SQLAlchemy AsyncSession object.
-    :return: Ingredient group mapped object.
-    """
-    stmt = sqlalchemy.select(RecipeDimensions).where(RecipeDimensions.name == dimension)
-    response = await session.execute(stmt)
-    found_dimension = response.scalars().first()
-    if found_dimension:
-        return found_dimension
-    else:
-        found_dimension = RecipeDimensions(name=dimension)
-        session.add(found_dimension)
-        return found_dimension
-
-
-async def create_recipe_ingredient(ingredient: CreateRecipeIngredientRequestModel, session) -> RecipeIngredients:
-    """
-    Method will create RecipeIngredients object.
-    For additional info check app.database.models.base -> RecipeIngredients.
-
-    :param ingredient: Ingredient request object.
-    :param session: SQLAlchemy AsyncSession object.
-    :return: Created ingredient.
-    """
-    ingredient_model = await get_ingredient_model_or_create_if_not_exists(ingredient, session)
-    dimension_model = await get_dimension_model_or_create_if_not_exists(ingredient.dimension, session)
-    recipe_ingredient = RecipeIngredients(
-        ingredient=ingredient_model,
-        value=ingredient.weight,
-        dimension=dimension_model,
-    )
-    return recipe_ingredient
-
-
-async def get_category_or_create_if_not_exists(category: str, session) -> RecipeCategories:
-    """
-    Method return category by passed name. If category does not exist, then it will be created.
-    For additional info check app.database.models.base -> RecipeCategories.
-
-    :param category: Dimension name.
-    :param session: SQLAlchemy AsyncSession object.
-    :return: Ingredient group mapped object.
-    """
-    stmt = sqlalchemy.select(RecipeCategories).where(RecipeCategories.name == category)
-    response = await session.execute(stmt)
-    found_category = response.scalars().first()
-    if found_category:
-        return found_category
-    else:
-        found_category = RecipeCategories(name=category)
-        return found_category
 
 
 async def create_or_update_recipe_ingredients(
@@ -155,34 +49,9 @@ async def create_or_update_recipe_ingredients(
         old_ingredient = recipe.ingredients.pop()
         await session.delete(old_ingredient)
     for ingredient in new_ingredients:
-        new_ingredient = await create_recipe_ingredient(ingredient, session)
+        new_ingredient = await RecipeIngredients.create(ingredient, session)
         new_ingredient.recipe_id = recipe.id
         recipe.ingredients.append(new_ingredient)
-
-
-async def remove_deleted_ingredients_from_recipe(
-        new_ingredients: List[CreateRecipeIngredientRequestModel],
-        recipe: Recipes
-) -> None:
-    """
-    Method is used for recipe ingredients updating. It compares old ingredients list and new. And removes all
-    old ingredients that do not intersect with new ingredients list (removes ingredients that was deleted).
-
-    :param new_ingredients: New ingredients list.
-    :param recipe: Recipe that should be updated.
-    :return: None
-    """
-    current_ingredient_names: List[str] = [
-        recipe_ingredient.ingredient.name
-        for recipe_ingredient
-        in recipe.ingredients
-    ]
-    new_ingredients_names: List[str] = [ingredient.name for ingredient in new_ingredients]
-    deleted_ingredient_names = list(set(current_ingredient_names) - set(new_ingredients_names))
-    deleted_ingredient_models = list(
-        filter(lambda x: x.ingredient.name in deleted_ingredient_names, recipe.ingredients))
-    for deleted_ingredient in deleted_ingredient_models:
-        recipe.ingredients.remove(deleted_ingredient)
 
 
 async def update_recipe_steps(
@@ -235,7 +104,7 @@ async def update_recipe_categories(
             )[0]
         )
     for new_category in categories_to_add:
-        recipe.categories.append(await get_category_or_create_if_not_exists(new_category, session=session))
+        recipe.categories.append(await RecipeCategories.get_by_name_or_create(category=new_category, session=session))
 
 
 async def update_recipe_groups(
@@ -358,7 +227,7 @@ async def select_recipes_and_filter_them(
     return recipes
 
 
-def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipesRecipeResponseModel]:
+def build_recipes_output(recipes: list[Recipes], current_user: Optional[UserModel]) -> List[GetRecipesRecipeResponseModel]:
     """
     Method build list of recipes to output format. Add links to images and liked fields.
     Description: recipe 'liked' if user who request this recipe is liked it.
@@ -367,6 +236,13 @@ def build_recipes_output(recipes: list[Recipes], current_user) -> List[GetRecipe
     :param current_user: User information object
     :return: List of formatted recipes
     """
+    user_groups = current_user.groups if current_user else [NOT_AUTHENTICATED_GROUP_NAME]
+    if ADMIN_GROUP_NAME not in user_groups:
+        recipes = list(filter(lambda x: x.image is not None, recipes))
+
+    if PAYED_GROUP_NAME not in user_groups or ADMIN_GROUP_NAME not in user_groups:
+        recipes = list(filter(lambda x: PAYED_GROUP_NAME not in x.allowed_groups, recipes))
+
     recipes_to_return = []
     for recipe in recipes:
         recipe_dicted = recipe.__dict__
@@ -463,13 +339,13 @@ async def create_new_recipe(
                                   user_id=current_user.id)
     # adding ingredients to recipe. if ingredient don't exist, first create new ingredient
     for ingredient in ingredients:
-        new_recipe.ingredients.append(await create_recipe_ingredient(ingredient, session))
+        new_recipe.ingredients.append(await RecipeIngredients.create(ingredient, session))
     # adding cooking steps to recipe.
     for step in steps:
         new_recipe.steps.append(RecipeSteps(step_num=step.step_num, content=step.content))
     # adding categories to recipe. if ingredient don't exist, first create new ingredient
     for category in categories:
-        new_recipe.categories.append(await get_category_or_create_if_not_exists(category, session))
+        new_recipe.categories.append(await RecipeCategories.get_by_name_or_create(category, session))
 
     if allowed_groups:
         group_models = []

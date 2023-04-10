@@ -13,14 +13,12 @@ from app.api.routes.v1.recipes.utility_classes import (
     RecipeResponseModel)
 from app.api.routes.v1.recipes.utils import (
     parse_ingredients_to_pydantic_models, parse_steps_to_pydantic_models,
-    parse_categories_to_list, get_recipe_by_id, select_recipes_and_filter_them,
+    parse_categories_to_list, select_recipes_and_filter_them,
     build_recipes_output, build_recipe_output, check_is_user_allow_to_modify_recipe,
     create_new_recipe, update_recipe, select_liked_recipes)
-from app.api.routes.v1.utils.auth import get_user_by_token, get_user_by_token_or_none
 from app.api.routes.v1.utils.service_models import UserModel
 from app.constants import ADMIN_GROUP_NAME, NOT_AUTHENTICATED_GROUP_NAME
-from app.database import DatabaseManagerAsync
-from app.database.models.base import Users, Recipes, Ingredients, RecipeIngredients
+from app.database.models.base import Users, Recipes
 
 
 async def get_recipes_view(
@@ -73,7 +71,7 @@ async def get_recipes_by_ingredient_view(
     :return: found recipes list
     """
     # get recipes with selected filters
-    recipes = await select_recipes_and_filter_them(
+    recipes = await Recipes.get_all_with_ingredients(
         session=session,
         user_groups=current_user.groups,
         prefer_ingredients=[ingredient_name],
@@ -172,7 +170,7 @@ async def delete_recipe_view(recipe_id: int, session: AsyncSession, current_user
     :return: Response with status
     """
     async with session.begin():
-        recipe: Recipes = await get_recipe_by_id(recipe_id=recipe_id, session=session)
+        recipe: Recipes = await Recipes.get_by_id(recipe_id=recipe_id, session=session)
         await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user)
         await session.delete(recipe)
         return DefaultResponse(detail="Рецепт был удален")
@@ -267,7 +265,14 @@ async def update_recipe_view(
     :return: Response with status
     """
     async with session.begin():
-        recipe = await get_recipe_by_id(recipe_id=recipe_id, session=session)
+        recipe = await Recipes.get_by_id(
+            recipe_id=recipe_id,
+            session=session,
+            join_tables=[
+                Recipes.compilations, Recipes.allowed_groups, Recipes.ingredients,
+                Recipes.steps, Recipes.categories
+            ]
+        )
         await update_recipe(
             recipe=recipe,
             title=title,

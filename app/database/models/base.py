@@ -11,6 +11,8 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import declarative_base, relationship, selectinload
 from starlette import status
 
+from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel
+
 Base = declarative_base()
 
 """
@@ -84,8 +86,13 @@ association_ingredients_groups = Table(
 
 UsersTypeVar = TypeVar("UsersTypeVar", bound="Users")
 RecipesTypeVar = TypeVar("RecipesTypeVar", bound="Recipes")
+RecipeIngredientsTypeVar = TypeVar("RecipeIngredientsTypeVar", bound="RecipeIngredients")
+RecipeCategoriesTypeVar = TypeVar("RecipeCategoriesTypeVar", bound="RecipeCategories")
 ChatMessagesTypeVar = TypeVar("ChatMessagesTypeVar", bound="ChatMessages")
 ArticlesTypeVar = TypeVar("ArticlesTypeVar", bound="Articles")
+IngredientsGroupsTypeVar = TypeVar("IngredientsGroupsTypeVar", bound="IngredientsGroups")
+IngredientsTypeVar = TypeVar("IngredientsTypeVar", bound="Ingredients")
+RecipeDimensionsTypeVar = TypeVar("RecipeDimensionsTypeVar", bound="RecipeDimensions")
 
 
 class Users(Base):
@@ -300,6 +307,26 @@ class IngredientsGroups(Base):
     ingredients = relationship("Ingredients", back_populates="groups", secondary=association_ingredients_groups)
     """ingredients in this group"""
 
+    @classmethod
+    async def get_by_name_or_create(cls, name: str, session) -> IngredientsGroupsTypeVar:
+        """
+        Method return ingredient group by passed name. If group does not exist, then it will be created.
+        For additional info check app.database.models.base -> IngredientsGroups.
+
+        :param name: Group name.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Ingredient group mapped object.
+        """
+        stmt = sqlalchemy.select(IngredientsGroups).where(IngredientsGroups.name == name)
+        response = await session.execute(stmt)
+        found_group = response.scalars().first()
+        if found_group:
+            return found_group
+        else:
+            new_group = IngredientsGroups(name=name)
+            session.add(new_group)
+            return new_group
+
     def __str__(self):
         """string represent of model"""
         return self.name
@@ -338,6 +365,30 @@ class Ingredients(Base):
         """string represent of model"""
         return self.name
 
+    @classmethod
+    async def get_by_name_or_create(cls, ingredient: CreateRecipeIngredientRequestModel, session: AsyncSession) \
+            -> IngredientsTypeVar:
+        """
+        Method return ingredient by passed name. If ingredient does not exist, then it will be created.
+        Ingredient groups will be added too.
+        For additional info check app.database.models.base -> Ingredients.
+
+        :param ingredient: ingredient name.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Ingredient group mapped object.
+        """
+        stmt = sqlalchemy.select(Ingredients).where(Ingredients.name == ingredient.name)
+        response = await session.execute(stmt)
+        found_ingredient = response.scalars().first()
+        if found_ingredient:
+            return found_ingredient
+        new_ingredient_model = Ingredients(name=ingredient.name.lower().capitalize())
+        for group in ingredient.groups:
+            group_model = await IngredientsGroups.get_by_name_or_create(group, session)
+            new_ingredient_model.groups.append(group_model)
+        session.add(new_ingredient_model)
+        return new_ingredient_model
+
 
 class RecipeDimensions(Base):
     """
@@ -361,6 +412,26 @@ class RecipeDimensions(Base):
     def __str__(self):
         """string represent of model"""
         return self.name
+
+    @classmethod
+    async def get_by_name_or_create(cls, dimension: str, session) -> RecipeDimensionsTypeVar:
+        """
+        Method return dimension by passed name. If dimension does not exist, then it will be created.
+        For additional info check app.database.models.base -> RecipeDimensions.
+
+        :param dimension: Dimension name.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Ingredient group mapped object.
+        """
+        stmt = sqlalchemy.select(RecipeDimensions).where(RecipeDimensions.name == dimension)
+        response = await session.execute(stmt)
+        found_dimension = response.scalars().first()
+        if found_dimension:
+            return found_dimension
+        else:
+            found_dimension = RecipeDimensions(name=dimension)
+            session.add(found_dimension)
+            return found_dimension
 
 
 class RecipeIngredients(Base):
@@ -420,6 +491,26 @@ class RecipeIngredients(Base):
         """string represent of model"""
         return f"{str(self.ingredient)}, {self.value} {str(self.dimension)}"
 
+    @classmethod
+    async def create(cls, ingredient: CreateRecipeIngredientRequestModel, session) \
+            -> RecipeIngredientsTypeVar:
+        """
+        Method will create RecipeIngredients object.
+        For additional info check app.database.models.base -> RecipeIngredients.
+
+        :param ingredient: Ingredient request object.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Created ingredient.
+        """
+        ingredient_model = await Ingredients.get_by_name_or_create(ingredient, session)
+        dimension_model = await RecipeDimensions.get_by_name_or_create(ingredient.dimension, session)
+        recipe_ingredient = RecipeIngredients(
+            ingredient=ingredient_model,
+            value=ingredient.weight,
+            dimension=dimension_model,
+        )
+        return recipe_ingredient
+
 
 class RecipeCompilations(Base):
     """
@@ -478,6 +569,25 @@ class RecipeCategories(Base):
     def __str__(self):
         """string represent of model"""
         return self.name
+
+    @classmethod
+    async def get_by_name_or_create(cls, category: str, session) -> RecipeCategoriesTypeVar:
+        """
+        Method return category by passed name. If category does not exist, then it will be created.
+        For additional info check app.database.models.base -> RecipeCategories.
+
+        :param category: Dimension name.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Ingredient group mapped object.
+        """
+        stmt = sqlalchemy.select(RecipeCategories).where(RecipeCategories.name == category)
+        response = await session.execute(stmt)
+        found_category = response.scalars().first()
+        if found_category:
+            return found_category
+        else:
+            found_category = RecipeCategories(name=category)
+            return found_category
 
 
 class RecipeSteps(Base):
@@ -665,7 +775,7 @@ class Recipes(Base):
     """RecipeSteps model links"""
     categories = relationship("RecipeCategories", secondary=association_recipes_categories, back_populates="recipes")
     """RecipeCategories model links"""
-    ingredients = relationship("RecipeIngredients", cascade="all, delete")
+    ingredients: List[RecipeIngredientsTypeVar] = relationship("RecipeIngredients", cascade="all, delete")
     """RecipeIngredients model links"""
     compilations = relationship(
         "RecipeCompilations",
@@ -709,6 +819,28 @@ class Recipes(Base):
         if not recipe:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Рецепт не найден")
         return recipe
+
+    @classmethod
+    async def get_all_with_ingredients(
+            cls,
+            ingredient_names: List[str],
+            session: AsyncSession
+    ) -> List[RecipesTypeVar]:
+        stmt = sqlalchemy.select(Recipes)
+        stmt = stmt.join(RecipeIngredients).join(Ingredients)
+        stmt = stmt.filter(Ingredients.name.in_(ingredient_names))
+        response = await session.execute(stmt)
+        recipes: List[Recipes] = response.scalars().all()
+        return recipes
+
+    @classmethod
+    async def get_all_with_categories(cls, categories_names: List[str], session: AsyncSession) -> List[RecipesTypeVar]:
+        stmt = sqlalchemy.select(Recipes)
+        stmt = stmt.join(RecipeCategories)
+        stmt = stmt.filter(RecipeCategories.name.in_(categories_names))
+        response = await session.execute(stmt)
+        recipes: List[Recipes] = response.scalars().all()
+        return recipes
 
     def __str__(self):
         """string represent of model"""

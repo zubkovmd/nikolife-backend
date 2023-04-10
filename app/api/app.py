@@ -29,6 +29,7 @@ if settings.sentry:
 
 app = fastapi.FastAPI()
 
+
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
     start_time = time.time()
@@ -43,6 +44,8 @@ app.add_middleware(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+
 @app.on_event("startup")
 async def startup():
     """startup methods for FastAPI application"""
