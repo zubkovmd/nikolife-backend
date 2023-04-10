@@ -178,7 +178,7 @@ async def update_user_view(
         # TODO: change get_by_username to get_by_id (requires frontend changes)
         if ADMIN_GROUP_NAME not in current_user.groups and username!=current_user.username:
             raise HTTPException(status_code=403, detail="Вам нельзя редактировать этого пользователя")
-        user: Users = await Users.get_by_username(session=session, username=current_user.username, join_tables=[Users.groups])
+        user: Users = await Users.get_by_username(session=session, username=username, join_tables=[Users.groups])
         if username:
             user.username = username
         if email:
