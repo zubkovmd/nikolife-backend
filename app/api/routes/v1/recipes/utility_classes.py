@@ -183,6 +183,7 @@ class GetRecipesRecipeResponseModel(BaseModel):
     """is recipe liked by user who requested it"""
     allowed: bool
     """is recipe allowed to user"""
+    allowed_groups_list: List[str]
 
 
 class GetRecipesResponseModel(BaseModel):
