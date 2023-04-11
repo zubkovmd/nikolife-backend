@@ -23,7 +23,7 @@ from app.api.routes.v1.recipes.utility_classes import (
 from app.api.routes.v1.recipes.utils import get_category_image
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
-from app.constants import PAYED_GROUP_NAME, ADMIN_GROUP_NAME
+from app.constants import PAYED_GROUP_NAME, ADMIN_GROUP_NAME, NOT_AUTHENTICATED_GROUP_NAME
 from app.database.models.base import (
     RecipeCategories,
     Ingredients,
@@ -89,16 +89,22 @@ async def get_recipes_compilations_view(
         response = await session.execute(stmt)
         compilations: List[RecipeCompilations] = response.scalars().all()
         # If compilations found, for each we should make link to s3
+        user_groups = current_user.groups if current_user else [NOT_AUTHENTICATED_GROUP_NAME]
         if compilations:
             found_compilations = []
             for compilation in compilations:
-                found_compilations.append(
-                    RecipeCompilationResponseModel(
-                        compilation_id=compilation.id,
-                        name=compilation.name,
-                        image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg")
+                user_can_see_recipes_in_compilation = False
+                for recipe in compilation.recipes:
+                    if len(set(user_groups).intersection(set([group.name for group in recipe.allowed_groups]))) > 0:
+                        user_can_see_recipes_in_compilation = True
+                if user_can_see_recipes_in_compilation:
+                    found_compilations.append(
+                        RecipeCompilationResponseModel(
+                            compilation_id=compilation.id,
+                            name=compilation.name,
+                            image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg")
+                        )
                     )
-                )
             return RecipeCompilationsResponseModel(compilations=found_compilations)
         else:
             return RecipeCompilationsResponseModel(compilations=[])
