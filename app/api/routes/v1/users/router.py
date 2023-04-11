@@ -40,7 +40,7 @@ async def get_me(
     if current_user.image:
         # if user has a profile image, then we should get its link from s3
         user_dict["image"] = S3Manager.get_instance().get_url(f"{current_user.image}_small.jpg")
-        user_dict["groups"] = await Users.get_groups_with_expiration_time(user_id=current_user.id, session=session)
+    user_dict["groups"] = await Users.get_groups_with_expiration_time(user_id=current_user.id, session=session)
     return UserRequestResponse(detail="Пользователь найден", user=User(**user_dict))
 
 
