@@ -5,7 +5,7 @@ COPY requirements.txt /proj/
 RUN python -m pip install setuptools==57.5.0
 RUN python -m pip install  -r requirements.txt
 
-RUN apt-get -y update && apt-get -y upgrade && apt-get -y install locales
+RUN apt-get -y update && apt-get -y upgrade && apt-get -y install locales cron
 RUN echo "u_RU.UTF-8 UTF-8" >> /etc/locale.ge
 ENV locale-gen ru_RU ru_RU.UTF-8
 
