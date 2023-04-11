@@ -12,7 +12,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import declarative_base, relationship, selectinload
 from starlette import status
 
-from app.api.routes.default_response_models import GroupWithExpirationTime
+from app.api.routes.default_response_models import GroupWithExpirationTime, DefaultResponse
 from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel
 
 Base = declarative_base()
@@ -643,23 +643,48 @@ class RecipeCategories(Base):
         return category
 
     @classmethod
-    async def get_by_name_or_create(cls, category: str, session: AsyncSession) -> RecipeCategoriesTypeVar:
+    async def delete_by_id(cls, category_id: int, session: AsyncSession) -> None:
+        """
+        Method removes category from base
+
+        :param category_id: category id
+        :param session: SQLAlchemy AsyncSession object
+        :return: None
+        """
+        await session.execute(sqlalchemy.delete(RecipeCategories).where(RecipeCategories.id == category_id))
+
+    @classmethod
+    async def get_by_name(cls, name: str, session: AsyncSession) -> Optional[RecipeCategoriesTypeVar]:
+        """
+        Method search category by name
+
+        :param name: category name
+        :param session: SQLAlchemy AsyncSession object
+        :return: category
+        """
+        response = await session.execute(
+            sqlalchemy.select(RecipeCategories)
+            .filter(RecipeCategories.name == name)
+            .limit(1)
+        )
+        return response.scalars().first()
+
+    @classmethod
+    async def get_by_name_or_create(cls, name: str, session: AsyncSession) -> RecipeCategoriesTypeVar:
         """
         Method return category by passed name. If category does not exist, then it will be created.
         For additional info check app.database.models.base -> RecipeCategories.
 
-        :param category: Dimension name.
+        :param name: Dimension name.
         :param session: SQLAlchemy AsyncSession object.
         :return: Ingredient group mapped object.
         """
-        stmt = sqlalchemy.select(RecipeCategories).where(RecipeCategories.name == category)
-        response = await session.execute(stmt)
-        found_category = response.scalars().first()
-        if found_category:
-            return found_category
+        category = await RecipeCategories.get_by_name(name=name, session=session)
+        if category:
+            return category
         else:
-            found_category = RecipeCategories(name=category)
-            return found_category
+            category = RecipeCategories(name=name)
+            return category
 
 
 class RecipeSteps(Base):

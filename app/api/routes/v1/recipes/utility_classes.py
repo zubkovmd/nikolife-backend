@@ -68,7 +68,7 @@ class RecipeCategoryResponseModel(BaseModel):
     """Model for recipe category with image"""
     id: int
     name: str
-    image: str
+    image: Optional[str]
 
 
 class RecipeCategoriesResponseModel(BaseModel):

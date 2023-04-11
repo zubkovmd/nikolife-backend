@@ -4,7 +4,7 @@ Recipes router module. Contains all routes that interact with recipes.
 
 from typing import List, Optional, Union
 
-from fastapi import Depends, UploadFile, Form, File, APIRouter, Body, Query
+from fastapi import Depends, UploadFile, Form, File, APIRouter, Body, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse, DefaultResponseWithPayload
@@ -202,15 +202,46 @@ async def update_recipe(
 
 @router.get("/categories", response_model=RecipeCategoriesResponseModel)
 async def get_recipes_categories(
+        current_user: UserModel = Depends(get_user_by_token),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
     """
     Route returns all recipe categories available in service.
 
+    :param current_user: current user model
     :param session: SQLAlchemy AsyncSession object.
     :return: Response with available categories.
     """
-    return await get_recipes_categories_view(session)
+    return await get_recipes_categories_view(current_user=current_user, session=session)
+
+
+@router.post("/categories", response_model=DefaultResponse)
+async def create_recipe_category(
+        name: str = Form(...),
+        image: Optional[UploadFile] = None,
+        current_user: UserModel = Depends(get_admin_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+):
+    """
+    Route returns category info
+
+    :param name: category name
+    :param image: category image
+    :param current_user: current user data
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Category info
+    """
+    async with session.begin():
+        category = await RecipeCategories.get_by_name(name=name, session=session)
+        if category:
+            raise HTTPException(status_code=409, detail="Такая категория уже существует")
+        category = await RecipeCategories.get_by_name_or_create(name=name, session=session)
+        if image:
+            filename = build_full_path(f"{current_user.username}/categories/{name}", image)
+            S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+            category.image = filename
+        session.add(category)
+        return DefaultResponse(detail="Категория добавлена")
 
 
 @router.get("/categories/{category_id}", response_model=RecipeCategoryResponseModel)
@@ -237,7 +268,7 @@ async def update_recipe_category(
         category_id: int = Form(...),
         name: Optional[str] = Form(None),
         image: Optional[UploadFile] = Form(None),
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_admin_by_token),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
     """
@@ -259,6 +290,16 @@ async def update_recipe_category(
             S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
             category.image = filename
         return DefaultResponse(detail="Рецепт обновлен")
+
+
+@router.delete("/categories/delete", response_model=DefaultResponse, dependencies=[Depends(get_admin_by_token)])
+async def delete_category(
+        category_id: int = Form(...),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+):
+    async with session.begin():
+        await RecipeCategories.delete_by_id(category_id=category_id, session=session)
+    return DefaultResponse(detail="Категория удалена")
 
 
 @router.get("/compilations", response_model=RecipeCompilationsResponseModel)

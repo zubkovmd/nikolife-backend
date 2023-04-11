@@ -104,7 +104,7 @@ async def update_recipe_categories(
             )[0]
         )
     for new_category in categories_to_add:
-        recipe.categories.append(await RecipeCategories.get_by_name_or_create(category=new_category, session=session))
+        recipe.categories.append(await RecipeCategories.get_by_name_or_create(name=new_category, session=session))
 
 
 async def update_recipe_groups(

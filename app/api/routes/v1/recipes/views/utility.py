@@ -23,7 +23,7 @@ from app.api.routes.v1.recipes.utility_classes import (
 from app.api.routes.v1.recipes.utils import get_category_image
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
-from app.constants import PAYED_GROUP_NAME
+from app.constants import PAYED_GROUP_NAME, ADMIN_GROUP_NAME
 from app.database.models.base import (
     RecipeCategories,
     Ingredients,
@@ -37,11 +37,13 @@ from app.utils import S3Manager
 
 async def get_recipes_categories_view(
         session: AsyncSession,
+        current_user: Optional[UserModel]
 ) -> RecipeCategoriesResponseModel:
     """
     View returns all recipe categories in service. As category image service selects
     image of first recipe with image in this category
 
+    :param current_user: current user info
     :param session: SQLAlchemy AsyncSession
     :return: Response with existing categories.
     """
@@ -58,7 +60,7 @@ async def get_recipes_categories_view(
             found_categories = []
             for category in categories:
                 image = await get_category_image(category=category.name, session=session)
-                if image is None:
+                if image is None and not (current_user and ADMIN_GROUP_NAME in current_user.groups):
                     continue
                 found_categories.append(RecipeCategoryResponseModel(id=category.id, name=category.name, image=image))
             return RecipeCategoriesResponseModel(categories=found_categories)
