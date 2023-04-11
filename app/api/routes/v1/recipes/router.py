@@ -13,7 +13,8 @@ from app.api.routes.v1.recipes.utility_classes import (
     RecipeLikesRequestModel, FindResponseModel, RecipeCompilationsResponseModel,
     CreateCompilationRequestModel, GetIngredientsResponseModel, GetDimensionsResponseModel,
     GetIngredientGroupsResponseModel, GetIngredientsWithGroupsResponseModel, RecipeOneCompilationResponseModel,
-    UpdateCompilationRequestModel)
+    UpdateCompilationRequestModel, RecipeCategoryResponseModel)
+from app.api.routes.v1.recipes.utils import get_category_image
 from app.api.routes.v1.recipes.views.default import get_recipes_view, get_recipe_view, delete_recipe_view, \
     create_recipe_view, update_recipe_view, get_liked_recipes_view, get_recipes_by_ingredient_view, \
     get_recipes_by_category_view
@@ -24,7 +25,10 @@ from app.api.routes.v1.recipes.views.utility import get_recipes_categories_view,
     get_one_compilation_view, update_recipes_compilation_view, delete_recipes_compilation_view
 from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token, get_user_by_token_or_none
 from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.utility import build_full_path
 from app.database import DatabaseManagerAsync
+from app.database.models.base import RecipeCategories
+from app.utils import S3Manager
 
 router = APIRouter(prefix="/recipes")
 
@@ -207,6 +211,54 @@ async def get_recipes_categories(
     :return: Response with available categories.
     """
     return await get_recipes_categories_view(session)
+
+
+@router.get("/categories/{category_id}", response_model=RecipeCategoryResponseModel)
+async def get_recipe_category(
+        category_id: int,
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+):
+    """
+    Route returns category info
+
+    :param category_id: category id
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Category info
+    """
+    async with session.begin():
+        category = await RecipeCategories.get_by_id(category_id=category_id, session=session)
+        category = category.__dict__
+        category["image"] = await get_category_image(category=category["name"], session=session)
+        return RecipeCategoryResponseModel(**category)
+
+
+@router.patch("/categories", response_model=DefaultResponse)
+async def update_recipe_category(
+        category_id: int = Form(...),
+        name: Optional[str] = Form(None),
+        image: Optional[UploadFile] = Form(None),
+        current_user: UserModel = Depends(get_user_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
+):
+    """
+    Route returns category info
+
+    :param image: new category image
+    :param name: new category name
+    :param category_id: category id
+    :param current_user: current user
+    :param session: SQLAlchemy AsyncSession object.
+    :return: Category info
+    """
+    async with session.begin():
+        category = await RecipeCategories.get_by_id(category_id=category_id, session=session)
+        if name:
+            category.name = name
+        if image:
+            filename = build_full_path(f"{current_user.username}/categories/{name}", image)
+            S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+            category.image = filename
+        return DefaultResponse(detail="Рецепт обновлен")
 
 
 @router.get("/compilations", response_model=RecipeCompilationsResponseModel)

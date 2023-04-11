@@ -444,6 +444,8 @@ async def get_category_image(category: str, session: AsyncSession) -> Optional[s
     category: RecipeCategories = resp.scalars().first()
     if not category:
         raise HTTPException(status_code=404, detail="Категория не найдена")
+    if category.image:
+        return S3Manager.get_instance().get_url(f"{category.image}_small.jpg")
     for recipe in category.recipes:
         if recipe.image:
             return S3Manager.get_instance().get_url(f"{recipe.image}_small.jpg")

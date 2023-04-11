@@ -626,7 +626,24 @@ class RecipeCategories(Base):
         return self.name
 
     @classmethod
-    async def get_by_name_or_create(cls, category: str, session) -> RecipeCategoriesTypeVar:
+    async def get_by_id(cls, category_id: int, session: AsyncSession) -> Optional[RecipeCategoriesTypeVar]:
+        """
+        Method returns category by id
+
+        :param category_id: category id
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Category object
+        """
+        response = await session.execute(
+            sqlalchemy.select(RecipeCategories)
+            .filter(RecipeCategories.id == category_id)
+            .limit(1)
+        )
+        category: RecipeCategories = response.scalars().first()
+        return category
+
+    @classmethod
+    async def get_by_name_or_create(cls, category: str, session: AsyncSession) -> RecipeCategoriesTypeVar:
         """
         Method return category by passed name. If category does not exist, then it will be created.
         For additional info check app.database.models.base -> RecipeCategories.

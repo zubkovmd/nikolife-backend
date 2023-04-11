@@ -60,7 +60,7 @@ async def get_recipes_categories_view(
                 image = await get_category_image(category=category.name, session=session)
                 if image is None:
                     continue
-                found_categories.append(RecipeCategoryResponseModel(name=category.name, image=image))
+                found_categories.append(RecipeCategoryResponseModel(id=category.id, name=category.name, image=image))
             return RecipeCategoriesResponseModel(categories=found_categories)
         else:
             return RecipeCategoriesResponseModel(categories=[])
