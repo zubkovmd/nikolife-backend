@@ -616,6 +616,8 @@ class RecipeCategories(Base):
     "recipe category id  (primary key, autogenerate)"
     name = Column(String, nullable=False)
     "recipe category name"
+    image = Column(String, nullable=True)
+    "recipe category image"
     recipes = relationship("Recipes", secondary=association_recipes_categories, back_populates="categories")
     "list of recipes with this category"
 
