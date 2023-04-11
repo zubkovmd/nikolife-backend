@@ -171,7 +171,7 @@ async def delete_recipe_view(recipe_id: int, session: AsyncSession, current_user
     """
     async with session.begin():
         recipe: Recipes = await Recipes.get_by_id(recipe_id=recipe_id, session=session)
-        await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user)
+        await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user, session=session)
         await session.delete(recipe)
         return DefaultResponse(detail="Рецепт был удален")
 
@@ -270,7 +270,7 @@ async def update_recipe_view(
             session=session,
             join_tables=[
                 Recipes.compilations, Recipes.allowed_groups, Recipes.ingredients,
-                Recipes.steps, Recipes.categories
+                Recipes.steps, Recipes.categories, Recipes.user
             ]
         )
         await update_recipe(

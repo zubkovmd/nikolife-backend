@@ -150,7 +150,7 @@ async def get_recipe_by_id(recipe_id: int, session: AsyncSession) -> Recipes:
     return recipe
 
 
-async def check_is_user_allow_to_modify_recipe(recipe: Recipes, current_user: UserModel):
+async def check_is_user_allow_to_modify_recipe(recipe: Recipes, current_user: UserModel, session: AsyncSession):
     """
     Method checks is user allowed to modify recipe. Allowed if this user is admin or it user created recipe.
     If user allowed, then method will work silently, else if user not allowed, then it throws
@@ -161,7 +161,8 @@ async def check_is_user_allow_to_modify_recipe(recipe: Recipes, current_user: Us
     :return: None
     """
     recipe_created_by_this_user = recipe.user.id == current_user.id
-    user_is_admin = ADMIN_GROUP_NAME in [group.name for group in recipe.user.groups]
+    user: Users = await Users.get_by_id(user_id=current_user.id, session=session, join_tables=[Users.groups])
+    user_is_admin = ADMIN_GROUP_NAME in [group.name for group in user.groups]
     # if user is not admin and try to delete recipe that was added by other user, then we should throw 401
     if not recipe_created_by_this_user and not user_is_admin:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="У вас нет прав на удаление рецепта")
@@ -394,7 +395,7 @@ async def update_recipe(
     :param current_user: User information object.
     :return: None
     """
-    await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user)
+    await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user, session=session)
     if title:
         recipe.title = title
     if image:
