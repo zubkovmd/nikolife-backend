@@ -10,6 +10,7 @@ RUN echo "u_RU.UTF-8 UTF-8" >> /etc/locale.ge
 ENV locale-gen ru_RU ru_RU.UTF-8
 
 COPY ./app /proj/app
+COPY ./cron_tasks/remove_outdated_groups.py /proj/remove_outdated_groups.py
 COPY main.py init.sh /proj/
 RUN chmod +x /proj/init.sh
 
