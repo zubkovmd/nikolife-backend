@@ -105,7 +105,9 @@ async def get_recipes_by_category_view(
     if not recipes:
         return GetRecipesResponseModel(recipes=[])
     # now for each recipe we should make image link and add 'liked' field (it's liked by request user)
-    current_user: Users = await Users.get_by_id(user_id=current_user.id, session=session)
+    current_user: Users = await Users.get_by_id(user_id=current_user.id, session=session, join_tables=[
+        Users.groups
+    ])
     return GetRecipesResponseModel(recipes=build_recipes_output(recipes=recipes, current_user=current_user))
 
 
