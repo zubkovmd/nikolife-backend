@@ -352,7 +352,7 @@ async def create_new_recipe(
         group_models = []
         for group in allowed_groups:
             group_models.append(await get_group_model_or_create_if_not_exists(group, session))
-        new_recipe.allowed_groups = [*group_models, await get_group_model_or_create_if_not_exists(ADMIN_GROUP_NAME, session=session)]
+        new_recipe.allowed_groups = group_models
 
     if image:
         filename = build_full_path(f"{current_user.username}/recipes/{new_recipe.title}", image)
