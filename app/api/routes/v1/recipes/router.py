@@ -202,7 +202,7 @@ async def update_recipe(
 
 @router.get("/categories", response_model=RecipeCategoriesResponseModel)
 async def get_recipes_categories(
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: Optional[UserModel] = Depends(get_user_by_token_or_none),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
     """
