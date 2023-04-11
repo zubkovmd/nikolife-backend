@@ -16,6 +16,7 @@ from app.api.routes.v1.users.views import register_user_view, delete_user_view, 
 from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
 from app.api.routes.v1.utils.service_models import UserModel
 from app.database import DatabaseManagerAsync
+from app.database.models.base import Users
 from app.utils import S3Manager
 from app.utils.auth import AvailableAuthProviders
 
@@ -24,10 +25,14 @@ router.include_router(groups_router)
 
 
 @router.get("/me", response_model=UserRequestResponse)
-async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRequestResponse:
+async def get_me(
+        current_user: UserModel = Depends(get_user_by_token),
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+) -> UserRequestResponse:
     """
     Gets user object by token.
 
+    :param session: FastAPI dependency, SQLAlchemy session object.
     :param current_user: User information object
     :return: Response with user object.
     """
@@ -35,6 +40,7 @@ async def get_me(current_user: UserModel = Depends(get_user_by_token)) -> UserRe
     if current_user.image:
         # if user has a profile image, then we should get its link from s3
         user_dict["image"] = S3Manager.get_instance().get_url(f"{current_user.image}_small.jpg")
+        user_dict["groups"] = await Users.get_groups_with_expiration_time(user_id=current_user.id, session=session)
     return UserRequestResponse(detail="Пользователь найден", user=User(**user_dict))
 
 
