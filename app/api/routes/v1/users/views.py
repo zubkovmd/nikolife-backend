@@ -2,6 +2,7 @@
 Views for user routes
 """
 import asyncio
+import datetime
 import uuid
 from datetime import timedelta
 from io import BytesIO
@@ -23,7 +24,7 @@ from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
 from app.constants import DEFAULT_USER_GROUP_NAME, ADMIN_GROUP_NAME
 from app.database import DatabaseManagerAsync
-from app.database.models.base import Users
+from app.database.models.base import Users, association_users_groups, Groups
 from app.utils import S3Manager
 from app.utils.auth import AvailableAuthProviders, AppleAuthentication, GoogleAuthentication, AuthBase
 
@@ -45,11 +46,9 @@ async def get_user_by_id_view(
         if user.image:
             # if user has a profile image, then we should get its link from s3
             dicted["image"] = S3Manager.get_instance().get_url(f"{user.image}_small.jpg")
-        # groups = [group.name for group in user.groups]
-        groups = user.group_names
         del dicted["groups"]
         user_response = UserRequestResponse(detail="Пользователь найден", user=User(**dicted))
-        user_response.user.groups = groups
+        user_response.user.groups = await Users.get_groups_with_expiration_time(user_id=user.id, session=session)
         return user_response
 
 
@@ -64,7 +63,7 @@ async def get_all_users_view(session: AsyncSession) -> UsersRequestResponse:
         users = await Users.get_all(session=session, join_tables=[Users.groups])
         users = [user.__dict__ for user in users]
         for user in users:
-            user["groups"] = [group.name for group in user["groups"]]
+            user["groups"] = await Users.get_groups_with_expiration_time(user_id=user["id"], session=session)
         return UsersRequestResponse(detail="Пользователи найдены", users=[User(**user) for user in users])
 
 
@@ -192,9 +191,24 @@ async def update_user_view(
             S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
             user.image = filename
         if groups:
-            groups = eval(groups)
+            groups = eval(groups.replace("null", "None"))
+
             new_user_groups = []
             for group in groups:
-                new_user_groups.append(await get_group_model_or_create_if_not_exists(group, session))
+                group["expiration_time"] = datetime.datetime.strptime(group["expiration_time"], "%Y-%m-%d") if group["expiration_time"] else None
+                new_user_groups.append(await get_group_model_or_create_if_not_exists(group["name"], session))
             user.groups = new_user_groups
+            user_id = user.id
+            await session.commit()
+            async with DatabaseManagerAsync.get_instance().get_session() as temp_session:
+                for group in groups:
+                    if group["expiration_time"] is None:
+                        continue
+                    tmp = await get_group_model_or_create_if_not_exists(group["name"], temp_session)
+                    await Groups.update_expiration_time(
+                        user_id=user_id,
+                        group_id=tmp.id,
+                        expiration_time=group["expiration_time"],
+                        session=temp_session
+                    )
         return DefaultResponse(detail="Информация о пользователе обновлена")

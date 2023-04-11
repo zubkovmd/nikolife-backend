@@ -2,7 +2,7 @@
 Module that contains default FastAPI response models.
 Check https://fastapi.tiangolo.com/tutorial/response-model/.
 """
-
+import datetime
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -25,6 +25,12 @@ class DefaultResponseWithPayload(DefaultResponse):
     """Payload for response"""
 
 
+class GroupWithExpirationTime(BaseModel):
+    """Group with expiration time model"""
+    name: str
+    expiration_time: Optional[datetime.datetime]
+
+
 class User(BaseModel):
     """Model with user info for response"""
     username: str
@@ -32,7 +38,7 @@ class User(BaseModel):
     email: str
     name: str
     info: str
-    groups: Optional[List[str]]
+    groups: Optional[List[GroupWithExpirationTime]]
     id: Optional[int]
 
 

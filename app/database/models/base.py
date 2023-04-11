@@ -1,6 +1,7 @@
 """
 Module contains sqlalchemy models for entire service.
 """
+import datetime
 from typing import Optional, TypeVar, List
 
 from fastapi import HTTPException
@@ -11,6 +12,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import declarative_base, relationship, selectinload
 from starlette import status
 
+from app.api.routes.default_response_models import GroupWithExpirationTime
 from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel
 
 Base = declarative_base()
@@ -94,6 +96,7 @@ ArticlesTypeVar = TypeVar("ArticlesTypeVar", bound="Articles")
 IngredientsGroupsTypeVar = TypeVar("IngredientsGroupsTypeVar", bound="IngredientsGroups")
 IngredientsTypeVar = TypeVar("IngredientsTypeVar", bound="Ingredients")
 RecipeDimensionsTypeVar = TypeVar("RecipeDimensionsTypeVar", bound="RecipeDimensions")
+GroupsTypeVar = TypeVar("GroupsTypeVar", bound="Groups")
 
 
 class Users(Base):
@@ -182,6 +185,21 @@ class Users(Base):
         return user
 
     @classmethod
+    async def get_groups_with_expiration_time(cls, user_id: int, session: AsyncSession) -> List[GroupWithExpirationTime]:
+        groups_response = await session.execute(
+            sqlalchemy.select(association_users_groups)
+            .filter(association_users_groups.c.users_id == user_id)
+        )
+        groups = groups_response.fetchall()
+        response: List[GroupWithExpirationTime] = []
+        for group_response in groups:
+            group_id: int = group_response[1]
+            expiration_time: Optional[datetime.datetime] = group_response[2]
+            group_model = await Groups.get_by_id(group_id=group_id, session=session)
+            response.append(GroupWithExpirationTime(name=group_model.name, expiration_time=expiration_time))
+        return response
+
+    @classmethod
     async def get_all(cls, session: AsyncSession, join_tables: Optional[list] = None) -> List[UsersTypeVar]:
         """
         Method returns user object from database with search by id. If user with this id does not exist, then throws
@@ -258,6 +276,40 @@ class Groups(Base):
     def __str__(self):
         """string represent of model"""
         return self.name
+
+    @classmethod
+    async def get_by_id(cls, group_id: int, session: AsyncSession) -> Optional[GroupsTypeVar]:
+        """
+        Method returns group by id
+
+        :param group_id: id of group
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Group object if group found else None
+        """
+        group_stmt = sqlalchemy.select(Groups).filter(Groups.id == group_id).limit(1)
+        group: Optional[Groups] = (await session.execute(group_stmt)).scalars().first()
+        return group
+
+    @classmethod
+    async def update_expiration_time(cls, user_id: int, group_id: int, expiration_time: datetime.datetime, session: AsyncSession):
+        """
+        Method updates time of group expiration;
+
+        :param user_id: user id
+        :param group_id: group id
+        :param expiration_time: new expiration time
+        :return: None
+        """
+        await session.execute(
+            sqlalchemy.update(association_users_groups)
+            .values(expiration_time=expiration_time)
+            .where(
+                sqlalchemy.and_(
+                    association_users_groups.c.users_id == user_id,
+                    association_users_groups.c.groups_id == group_id
+                )
+            )
+        )
 
 
 class ChatMessages(Base):
