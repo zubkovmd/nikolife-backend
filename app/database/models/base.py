@@ -637,6 +637,7 @@ class RecipeCategories(Base):
         response = await session.execute(
             sqlalchemy.select(RecipeCategories)
             .filter(RecipeCategories.id == category_id)
+            .options(selectinload(RecipeCategories.recipes))
             .limit(1)
         )
         category: RecipeCategories = response.scalars().first()
@@ -651,7 +652,9 @@ class RecipeCategories(Base):
         :param session: SQLAlchemy AsyncSession object
         :return: None
         """
-        await session.execute(sqlalchemy.delete(RecipeCategories).where(RecipeCategories.id == category_id))
+        category = await RecipeCategories.get_by_id(category_id=category_id, session=session)
+        category.recipes = []
+        await session.delete(category)
 
     @classmethod
     async def get_by_name(cls, name: str, session: AsyncSession) -> Optional[RecipeCategoriesTypeVar]:
