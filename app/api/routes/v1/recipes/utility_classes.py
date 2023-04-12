@@ -214,4 +214,4 @@ class GetDimensionsResponseModel(BaseModel):
 
 class GetIngredientGroupsResponseModel(BaseModel):
     """Model for listed available ingredients response"""
-    ingredients: List[str]
+    groups: List[str]
