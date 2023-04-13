@@ -12,6 +12,8 @@ from fastapi import HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from enum import Enum
 
+from sqlalchemy.orm import selectinload
+
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.api.routes.v1.users.models import AuthProviderResponseModel
 from app.api.routes.v1.utils.auth import create_access_token
@@ -38,7 +40,12 @@ class AuthBase(ABC):
 
     @classmethod
     async def get_user_object_by_mail(cls, session: AsyncSession, email: str) -> Optional[Users]:
-        stmt = sqlalchemy.select(Users).filter(Users.email == email).limit(1)
+        stmt = (
+            sqlalchemy.select(Users)
+            .filter(Users.email == email)
+            .limit(1)
+            .options(selectinload(Users.groups))
+        )
         user: Optional[Users] = (await session.execute(stmt)).scalars().first()
         return user
 

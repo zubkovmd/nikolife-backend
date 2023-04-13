@@ -94,6 +94,7 @@ async def authenticate_by_provider_view(
         dicted = user.__dict__.copy()
         if user.image:
             dicted["image"] = S3Manager.get_instance().get_url(f"{user.image}_small.jpg")
+        dicted["groups"] = await Users.get_groups_with_expiration_time(user_id=user.id, session=session)
         return UserAuthResponse(detail="Пользователь найден", user=User(**dicted), jwt=await AuthBase.generate_jwt(user=user))
 
 
