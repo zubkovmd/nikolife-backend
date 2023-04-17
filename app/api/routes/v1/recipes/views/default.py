@@ -172,7 +172,13 @@ async def delete_recipe_view(recipe_id: int, session: AsyncSession, current_user
     :return: Response with status
     """
     async with session.begin():
-        recipe: Recipes = await Recipes.get_by_id(recipe_id=recipe_id, session=session)
+        recipe: Recipes = await Recipes.get_by_id(
+            recipe_id=recipe_id,
+            session=session,
+            join_tables=[
+                Recipes.allowed_groups,
+                Recipes.user
+            ])
         await check_is_user_allow_to_modify_recipe(recipe=recipe, current_user=current_user, session=session)
         await session.delete(recipe)
         return DefaultResponse(detail="Рецепт был удален")
