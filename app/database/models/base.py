@@ -91,6 +91,7 @@ UsersTypeVar = TypeVar("UsersTypeVar", bound="Users")
 RecipesTypeVar = TypeVar("RecipesTypeVar", bound="Recipes")
 RecipeIngredientsTypeVar = TypeVar("RecipeIngredientsTypeVar", bound="RecipeIngredients")
 RecipeCategoriesTypeVar = TypeVar("RecipeCategoriesTypeVar", bound="RecipeCategories")
+RecipeCompilationsTypeVar = TypeVar("RecipeCompilationsTypeVar", bound="RecipeCompilations")
 ChatMessagesTypeVar = TypeVar("ChatMessagesTypeVar", bound="ChatMessages")
 ArticlesTypeVar = TypeVar("ArticlesTypeVar", bound="Articles")
 IngredientsGroupsTypeVar = TypeVar("IngredientsGroupsTypeVar", bound="IngredientsGroups")
@@ -596,6 +597,80 @@ class RecipeCompilations(Base):
     def __str__(self):
         """string represent of model"""
         return self.name
+
+    @classmethod
+    async def get_all(cls, session: AsyncSession) -> List[RecipeCategoriesTypeVar]:
+        """
+        Method returns all existing compilations
+
+        :param session: Sqlalchemy AsyncSession object
+        :return: list of existing compilations
+        """
+        stmt = (
+            sqlalchemy.select(RecipeCompilations)
+            .order_by(RecipeCompilations.position.asc())
+            .options(selectinload(RecipeCompilations.recipes))
+            .options(selectinload(RecipeCompilations.recipes, Recipes.allowed_groups))
+        )
+        response = await session.execute(stmt)
+        compilations: List[RecipeCompilations] = response.scalars().all()
+        return compilations
+
+    @classmethod
+    async def get_by_id(cls, session: AsyncSession, compilation_id: int, join_tables: list = ()) -> RecipeCompilationsTypeVar:
+        """
+        Method returns compilation by id
+
+        :param join_tables:
+        :param session: Sqlalchemy AsyncSession object
+        :param compilation_id: id of compilation
+        :raises status.HTTP_404_NOT_FOUND: if compilation is not found
+        :return: found compilation
+        """
+        stmt = sqlalchemy.select(RecipeCompilations).filter(RecipeCompilations.id == compilation_id)
+        if join_tables:
+            for table in join_tables:
+                stmt = stmt.options(selectinload(table))
+        response = await session.execute(stmt)
+        compilation: RecipeCompilations = response.scalars().first()
+        if not compilation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Подборка с id {compilation_id} не найдена"
+            )
+        return compilation
+
+    @classmethod
+    async def update_by_id(
+            cls,
+            session: AsyncSession,
+            compilation_id: int,
+            position: Optional[int],
+            name: Optional[str],
+            image: Optional[str],
+            recipes: List[RecipesTypeVar]
+    ):
+        compilation = await RecipeCompilations.get_by_id(session, compilation_id, [RecipeCompilations.recipes])
+        compilation.position = position if position else compilation.position
+        compilation.name = name if name else compilation.name
+        compilation.image = image if image else compilation.image
+        compilation.recipes = recipes if recipes else compilation.recipes
+
+    @classmethod
+    async def create(cls, name: str, image: str, position: int, recipes: List[RecipesTypeVar]) -> RecipeCompilationsTypeVar:
+        if name is None or image is None or recipes is None or position is None:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                detail="Ошибка в переданных параметрах рецепта. "
+                       "Отсутствует один из параметров (Название, изображение, список рецептов, позиция)"
+            )
+        compilation = RecipeCompilations(
+            name=name,
+            image=image,
+            position=position,
+            recipes=recipes
+        )
+        return compilation
 
 
 class RecipeCategories(Base):

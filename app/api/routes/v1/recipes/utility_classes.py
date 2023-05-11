@@ -57,6 +57,7 @@ class UpdateCompilationRequestModel(BaseModel):
     recipe_ids: List[int]
     title: str
     image: Optional[UploadFile]
+    position: int
 
 
 class RecipeLikesRequestModel(BaseModel):
@@ -85,6 +86,7 @@ class RecipeOneCompilationResponseModel(BaseModel):
     compilation_id: int
     name: str
     image: str
+    position: int
     recipes: List[RecipeOneCompilationRecipe]
 
 
@@ -93,6 +95,7 @@ class RecipeCompilationResponseModel(BaseModel):
     compilation_id: int
     name: str
     image: str
+    position: int
 
 
 class RecipeCompilationsResponseModel(BaseModel):

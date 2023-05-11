@@ -363,11 +363,12 @@ async def create_recipes_compilation(
 
 
 @router.patch("/compilations", response_model=DefaultResponse)
-async def create_recipes_compilation(
+async def update_recipes_compilation(
         compilation_id: int = Form(...),
         recipe_ids: List[int] = Form(...),
         image: Optional[UploadFile] = File(default=None),
         title: str = Form(...),
+        position: int = Form(...),
         current_user: UserModel = Depends(get_admin_by_token),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
 ):
@@ -375,9 +376,11 @@ async def create_recipes_compilation(
     Route for updating existing compilation.
     Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set a image.
 
+    :param compilation_id: Compilation id
     :param recipe_ids: id's of recipes that should appear in new compilation.
     :param image: Compilation image.
     :param title: Compilation title.
+    :param position: New position of compilation
     :param current_user: User information object.
     :param session: SQlAlchemy AsyncSession object.
     :return: List of available compilations.
@@ -389,7 +392,9 @@ async def create_recipes_compilation(
             compilation_id=compilation_id,
             recipe_ids=recipe_ids,
             image=image,
-            title=title),
+            title=title,
+            position=position
+        ),
         session)
 
 

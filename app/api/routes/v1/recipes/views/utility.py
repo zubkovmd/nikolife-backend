@@ -75,34 +75,30 @@ async def get_recipes_compilations_view(
     """
     View returns all recipe compilations registered in service.
 
+    :param current_user: User object
     :param session: SQLALchemy AsyncSession object.
     :return: Response with compilations
     """
     async with session.begin():
         # First, select all existing compilations
-        stmt = (
-            sqlalchemy.select(RecipeCompilations)
-            .order_by(RecipeCompilations.id.desc())
-            .options(selectinload(RecipeCompilations.recipes))
-            .options(selectinload(RecipeCompilations.recipes, Recipes.allowed_groups))
-        )
-        response = await session.execute(stmt)
-        compilations: List[RecipeCompilations] = response.scalars().all()
-        # If compilations found, for each we should make link to s3
+        compilations: List[RecipeCompilations] = await RecipeCompilations.get_all(session)
+        # Then we should filter compilations that current user can see
         user_groups = current_user.groups if current_user else [NOT_AUTHENTICATED_GROUP_NAME]
         if compilations:
             found_compilations = []
             for compilation in compilations:
                 user_can_see_recipes_in_compilation = False
                 for recipe in compilation.recipes:
-                    if len(set(user_groups).intersection(set([group.name for group in recipe.allowed_groups]))) > 0:
+                    if (ADMIN_GROUP_NAME in user_groups) or \
+                            len(set(user_groups).intersection(set([group.name for group in recipe.allowed_groups]))) > 0:
                         user_can_see_recipes_in_compilation = True
                 if user_can_see_recipes_in_compilation:
                     found_compilations.append(
                         RecipeCompilationResponseModel(
                             compilation_id=compilation.id,
                             name=compilation.name,
-                            image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg")
+                            image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg"),
+                            position=compilation.position
                         )
                     )
             return RecipeCompilationsResponseModel(compilations=found_compilations)
@@ -114,27 +110,21 @@ async def get_one_compilation_view(session: AsyncSession, compilation_id: int) -
     """
     View returns all recipe compilations registered in service.
 
+    :param compilation_id: compilation id
     :param session: SQLALchemy AsyncSession object.
     :return: Response with compilations
     """
     async with session.begin():
-        # First, select all existing compilations
-        response = await session.execute(
-            sqlalchemy.select(RecipeCompilations)
-            .filter(RecipeCompilations.id == compilation_id)
-            .options(selectinload(RecipeCompilations.recipes))
+        compilation: RecipeCompilations = await RecipeCompilations.get_by_id(
+            session=session,
+            compilation_id=compilation_id,
+            join_tables=[RecipeCompilations.recipes]
         )
-        compilation: RecipeCompilations = response.scalars().first()
-        # If compilations found, for each we should make link to s3
-        if not compilation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Подборка с id {compilation_id} не найдена"
-            )
 
         return RecipeOneCompilationResponseModel(
             compilation_id=compilation.id,
             name=compilation.name,
+            position=compilation.position,
             image=S3Manager.get_instance().get_url(f"{compilation.image}_small.jpg"),
             recipes=[i.__dict__ for i in compilation.recipes]
         )
@@ -154,14 +144,26 @@ async def create_recipes_compilation_view(
     :return: Response with status
     """
     async with session.begin():
-        # First, select all recipes, selected for new compilation
-        stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
-        recipes = (await session.execute(stmt)).scalars().all()
+        # First, load all recipes, selected for new compilation
+        recipes_list: List[Recipes] = [
+            await Recipes.get_by_id(recipe_id, session)
+            for recipe_id
+            in request.recipe_ids
+        ]
+        # find position of new compilation (compilations_count+1)
+        compilations_count = len(await RecipeCompilations.get_all(session))
+
         # Load compilation image to s3
         filename = build_full_path(f"{current_user.username}/compilations/{request.title}", request.image)
         S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
-        # Add new compilation
-        session.add(RecipeCompilations(name=request.title, recipes=recipes, image=filename))
+
+        new_compilation = RecipeCompilations.create(
+            name=request.title,
+            image=filename,
+            position=compilations_count+1,
+            recipes=recipes_list
+        )
+        session.add(new_compilation)
     return DefaultResponse(detail="Подборка добавлена")
 
 
@@ -180,40 +182,38 @@ async def update_recipes_compilation_view(
     """
     async with session.begin():
         # First, select all recipes, selected for new compilation
-        response = await session.execute(
-            sqlalchemy.select(RecipeCompilations)
-            .filter(RecipeCompilations.id == request.compilation_id)
-            .options(selectinload(RecipeCompilations.recipes))
-        )
-        compilation: RecipeCompilations = response.scalars().first()
-        if not compilation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Подборка с id {request.compilation_id} не найдена"
-            )
-        stmt = sqlalchemy.select(Recipes).where(Recipes.id.in_(request.recipe_ids))
-        recipes = (await session.execute(stmt)).scalars().all()
-        compilation.recipes = recipes
-        compilation.name = request.title
+        recipes_list: List[Recipes] = [
+            await Recipes.get_by_id(recipe_id, session)
+            for recipe_id
+            in request.recipe_ids
+        ]
+        new_image = None
         if request.image:
             # Load compilation image to s3
             filename = build_full_path(f"{current_user.username}/compilations/{request.title}", request.image)
             S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
-            compilation.image=filename
+            new_image = filename
+        await RecipeCompilations.update_by_id(
+            session=session,
+            compilation_id=request.compilation_id,
+            position=request.position,
+            name=request.title,
+            image=new_image if new_image else None,
+            recipes=recipes_list
+
+        )
         await session.commit()
     return DefaultResponse(detail="Подборка обновлена")
 
 
 async def delete_recipes_compilation_view(
-        current_user: UserModel,
         compilation_id: int,
         session: AsyncSession):
     """
     View that updates recipe compilation.
     Description: Compilation is name for a bunch of grouped recipes by admin. Admin should name it and set an image.
 
-    :param current_user: User information object
-    :param request: Request with compilation data
+    :param compilation_id: id of compilation
     :param session: SQLAlchemy AsyncSession object.
     :return: Response with status
     """
