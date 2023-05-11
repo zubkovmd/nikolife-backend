@@ -657,6 +657,15 @@ class RecipeCompilations(Base):
         compilation.recipes = recipes if recipes else compilation.recipes
 
     @classmethod
+    async def delete(
+            cls,
+            session: AsyncSession,
+            compilation_id: int
+    ):
+        compilation = await RecipeCompilations.get_by_id(session, compilation_id, [RecipeCompilations.recipes])
+        await session.delete(compilation)
+
+    @classmethod
     async def create(cls, name: str, image: str, position: int, recipes: List[RecipesTypeVar]) -> RecipeCompilationsTypeVar:
         if name is None or image is None or recipes is None or position is None:
             raise HTTPException(

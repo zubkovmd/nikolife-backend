@@ -157,7 +157,7 @@ async def create_recipes_compilation_view(
         filename = build_full_path(f"{current_user.username}/compilations/{request.title}", request.image)
         S3Manager.get_instance().send_image_shaped(image=request.image, base_filename=filename)
 
-        new_compilation = RecipeCompilations.create(
+        new_compilation = await RecipeCompilations.create(
             name=request.title,
             image=filename,
             position=compilations_count+1,
@@ -219,18 +219,7 @@ async def delete_recipes_compilation_view(
     """
     async with session.begin():
         # First, select all recipes, selected for new compilation
-        response = await session.execute(
-            sqlalchemy.select(RecipeCompilations)
-            .filter(RecipeCompilations.id == compilation_id)
-            .options(selectinload(RecipeCompilations.recipes))
-        )
-        compilation = response.scalars().first()
-        if not compilation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Подборка с id {compilation_id} не найдена"
-            )
-        await session.delete(compilation)
+        await RecipeCompilations.delete(session=session, compilation_id=compilation_id)
         await session.commit()
     return DefaultResponse(detail="Подборка удалена")
 

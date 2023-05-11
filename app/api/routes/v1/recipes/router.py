@@ -415,8 +415,6 @@ async def create_recipes_compilation(
     :return: List of available compilations.
     """
     return await delete_recipes_compilation_view(
-        current_user=current_user,
-        # Place form fields in a pydantic model
         compilation_id=compilation_id,
         session=session)
 
