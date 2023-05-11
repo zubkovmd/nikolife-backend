@@ -416,7 +416,8 @@ async def create_recipes_compilation(
     """
     return await delete_recipes_compilation_view(
         compilation_id=compilation_id,
-        session=session)
+        session=session
+    )
 
 
 @router.post("/toggle_recipe_like", response_model=DefaultResponse)

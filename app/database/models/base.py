@@ -651,10 +651,18 @@ class RecipeCompilations(Base):
             recipes: List[RecipesTypeVar]
     ):
         compilation = await RecipeCompilations.get_by_id(session, compilation_id, [RecipeCompilations.recipes])
-        compilation.position = position if position else compilation.position
         compilation.name = name if name else compilation.name
         compilation.image = image if image else compilation.image
         compilation.recipes = recipes if recipes else compilation.recipes
+        if position and position != compilation.position:
+            all_compilations = await RecipeCompilations.get_all(session)
+            all_positions = [compilation.position for compilation in all_compilations]
+            if position not in all_positions:
+                compilation.position = position
+            else:
+                compilation_with_new_position: RecipeCompilations = next(filter(lambda x: x.position == position, all_compilations))
+                compilation.position, compilation_with_new_position.position = compilation_with_new_position.position, compilation.position
+
 
     @classmethod
     async def delete(
@@ -662,9 +670,14 @@ class RecipeCompilations(Base):
             session: AsyncSession,
             compilation_id: int
     ):
-        compilation = await RecipeCompilations.get_by_id(session, compilation_id, [RecipeCompilations.recipes])
-        await session.delete(compilation)
-
+        compilations = await RecipeCompilations.get_all(session)
+        compilation_deleted = False
+        for compilation in compilations:
+            if compilation_deleted:
+                compilation.position = compilation.position - 1
+            if compilation.id == compilation_id:
+                await session.delete(compilation)
+                compilation_deleted = True
     @classmethod
     async def create(cls, name: str, image: str, position: int, recipes: List[RecipesTypeVar]) -> RecipeCompilationsTypeVar:
         if name is None or image is None or recipes is None or position is None:
