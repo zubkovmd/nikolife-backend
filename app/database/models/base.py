@@ -584,6 +584,8 @@ class RecipeCompilations(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     """recipes compilation id  (primary key, autogenerate)"""
+    position = Column(Integer, primary_key=False, autoincrement=False, nullable=True)
+    """Position of compilation"""
     name = Column(String, nullable=False)
     """recipe compilation name"""
     image = Column(String, nullable=True)
@@ -938,6 +940,18 @@ class Recipes(Base):
         stmt = sqlalchemy.select(Recipes)
         stmt = stmt.join(RecipeCategories)
         stmt = stmt.filter(RecipeCategories.name.in_(categories_names))
+        response = await session.execute(stmt)
+        recipes: List[Recipes] = response.scalars().all()
+        return recipes
+
+    @classmethod
+    async def get_liked(cls, user_id: int, session: AsyncSession) -> List[RecipesTypeVar]:
+        stmt = (
+            sqlalchemy
+            .select(Recipes)
+            .options(selectinload(Recipes.liked_by))
+            .filter(Users.id == user_id)
+        )
         response = await session.execute(stmt)
         recipes: List[Recipes] = response.scalars().all()
         return recipes
