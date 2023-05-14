@@ -58,7 +58,7 @@ async def password_recovery(
     session.add(recovery)
     EmailService.send_email(
         subject="Восстановление пароля от приложения Nikolife",
-        body=f"Для восстановления пароля, перейдите по ссылке http://localhost:3000/recovery?token={recovery.key}",
+        body=f"Для восстановления пароля, перейдите по ссылке {settings.recovery_base_path}?token={recovery.key}",
         recipients=[user.email]
     )
     await session.commit()
