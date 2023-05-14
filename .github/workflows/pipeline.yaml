@@ -56,7 +56,7 @@ jobs:
             -e EMAIL_SERVICE__PASSWORD=${{secrets.EMAIL_SERVICE__PASSWORD}} \
             -e EMAIL_SERVICE__SMTP_HOST=${{secrets.EMAIL_SERVICE__SMTP_HOST}} \
             -e EMAIL_SERVICE__SMTP_PORT=${{secrets.EMAIL_SERVICE__SMTP_PORT}} \
-            -e RECOVERY_BAE_PATH=${{secrets.RECOVERY_BASE_PATH}} \
+            -e RECOVERY_BASE_PATH=${{secrets.RECOVERY_BASE_PATH}} \
             --name ${{github.event.repository.name}} --network ${{secrets.BACKEND_DOCKER_NETWORK}} \
             --restart always \
             -d \
