@@ -98,6 +98,7 @@ IngredientsGroupsTypeVar = TypeVar("IngredientsGroupsTypeVar", bound="Ingredient
 IngredientsTypeVar = TypeVar("IngredientsTypeVar", bound="Ingredients")
 RecipeDimensionsTypeVar = TypeVar("RecipeDimensionsTypeVar", bound="RecipeDimensions")
 GroupsTypeVar = TypeVar("GroupsTypeVar", bound="Groups")
+RecoveryLogTypeVar = TypeVar("RecoveryLogTypeVar", bound="RecoveryLog")
 
 
 class Users(Base):
@@ -223,9 +224,9 @@ class Users(Base):
         return user
 
     @classmethod
-    async def get_by_username(cls, session: AsyncSession, username, join_tables: Optional[list] = None) -> UsersTypeVar:
+    async def get_by_username(cls, session: AsyncSession, username: str, join_tables: Optional[list] = None) -> UsersTypeVar:
         """
-        Method returns user object from database with search by id. If user with this id does not exists, then throws
+        Method returns user object from database with search by username. If user with this id does not exists, then throws
         404_NOT_FOUND exception.
 
         :param username:  username to search.
@@ -245,6 +246,31 @@ class Users(Base):
         user: Users = response.scalars().one()
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
+        return user
+
+    @classmethod
+    async def get_by_email(cls, session: AsyncSession, email: str, join_tables: Optional[list] = None) -> UsersTypeVar:
+        """
+        Method returns user object from database with search by email. If user with this id does not exists, then throws
+        404_NOT_FOUND exception.
+
+        :param email:  user email to search.
+        :param session: SQLAlchemy AsyncSession object.
+        :param join_tables: what tables should be joined to user object.
+        :return: User object.
+        """
+        stmt = (
+            sqlalchemy.select(Users)
+            .where(Users.email == email)
+            .limit(1)
+        )
+        if join_tables is not None:
+            for table in join_tables:
+                stmt = stmt.options(selectinload(table))
+        response = await session.execute(stmt)
+        user: Users = response.scalars().first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь с таким email не найден")
         return user
 
     def __str__(self):
@@ -1056,3 +1082,42 @@ class Recipes(Base):
     def __str__(self):
         """string represent of model"""
         return self.title
+
+
+class RecoveryLog(Base):
+    """
+    Recovery log model
+
+    Description:
+    When user request recovery for account, the application generates key and places the key to this table.
+    """
+    __tablename__ = "recovery_log"
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    """recovery id (primary key, autogenerate)"""
+    key = Column(String, nullable=False)
+    """recovery key"""
+    user_id = Column(Integer, nullable=False)
+    """id of user that init recovery"""
+    expire = Column(DateTime(timezone=True), nullable=False)
+    """time when key expires"""
+
+    @classmethod
+    async def create(cls, key: str, user_id: int) -> RecoveryLogTypeVar:
+        new_recovery = RecoveryLog(
+            key=key,
+            user_id=user_id,
+            expire=datetime.datetime.now() + datetime.timedelta(hours=4)
+        )
+        return new_recovery
+
+    @classmethod
+    async def get_by_key(cls, key: str, session: AsyncSession) -> RecoveryLogTypeVar:
+        stmt = sqlalchemy.select(RecoveryLog).filter(RecoveryLog.key == key)
+        response = await session.execute(stmt)
+        recovery = response.scalars().first()
+        if not recovery:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ключ восстановления не найден"
+            )
+        return recovery

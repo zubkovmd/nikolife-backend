@@ -113,6 +113,13 @@ class UserAuthenticationSettings(BaseModel):
     apple_provider: AppleAuthProviderSettings
 
 
+class EmailService(BaseSettings):
+    username: str
+    password: str
+    smtp_host: str
+    smtp_port: int
+
+
 class Settings(BaseSettings):
     """Base settings class"""
     database: Database
@@ -121,6 +128,8 @@ class Settings(BaseSettings):
     user_auth: UserAuthenticationSettings
     api: ApiSettings
     environment: Literal['development', 'testing', 'production']
+    email_service: EmailService
+    recovery_base_path: str
 
     class Config:
         """configuration for whole settings"""
