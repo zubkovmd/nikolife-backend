@@ -34,5 +34,5 @@
    2) run container with environment file and do 8000-to-80 port forward: `docker run --rm -p 8000:80 --network nikolife-backend --env-file dev_containered.env NAME_OF_CONTAINER`
 
 ## Testing
-You can test API with a postman. All  requests were exported with the collection file. You can find it in `./readme_files/nikolife.postman_collection.json`.
+You can test API with a postman. All requests were exported with the collection file. You can find it in `./readme_files/nikolife.postman_collection.json`.
 [Here is instruction how to import data to postman.](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/#importing-data-into-postman)
