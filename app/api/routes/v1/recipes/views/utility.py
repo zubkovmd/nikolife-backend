@@ -351,8 +351,11 @@ async def search_by_field(string_to_find, max_returns, model, field, session, jo
     if resp:
         return [resp]
     else:
-        search_by_semi_compare = sqlalchemy.select(model).filter(
-            func.lower(field).like(f"{string_to_find.lower()}%")).limit(max_returns)
+        search_by_semi_compare = (
+            sqlalchemy.select(model)
+            .filter(func.lower(field).like(f"%{string_to_find.lower()}%"))
+            .limit(max_returns)
+        )
         if join_tables:
             for table in join_tables:
                 search_by_semi_compare = search_by_semi_compare.options(selectinload(table))
@@ -393,7 +396,7 @@ async def find_all_view(
             join_tables=[Recipes.allowed_groups],
             session=session)
         if not current_user or PAYED_GROUP_NAME not in current_user.groups:
-            search_recipes = list(filter(lambda x: PAYED_GROUP_NAME not in [group.name for group in x.allowed_groups], search_recipes))
+            search_recipes = list(filter(lambda x: NOT_AUTHENTICATED_GROUP_NAME in [group.name for group in x.allowed_groups], search_recipes))
         response_model.recipes = [RecipeFindResponseModel(title=i.title, recipe_id=i.id) for i in search_recipes]
         # FIND IN CATEGORIES
         searh_categories: List[RecipeCategories] = await search_by_field(string_to_find=string_to_find,
