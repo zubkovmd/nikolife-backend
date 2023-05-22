@@ -151,8 +151,7 @@ class Users(Base):
     """List of messages received by user"""
     created_recipes: List[RecipesTypeVar] = relationship("Recipes", cascade="all, delete", passive_deletes=True, lazy="select")
     """List of recipes created by user"""
-    liked_recipes: List[RecipesTypeVar] = relationship("Recipes", secondary=association_recipes_likes, 
-                                                       back_populates="liked_by", cascade="all, delete")
+    liked_recipes: List[RecipesTypeVar] = relationship("Recipes", secondary=association_recipes_likes, back_populates="liked_by")
     """List of recipes liked by user"""
     articles: List[ArticlesTypeVar] = relationship("Articles", cascade="all, delete", passive_deletes=True)
     """List of articles created by user"""
