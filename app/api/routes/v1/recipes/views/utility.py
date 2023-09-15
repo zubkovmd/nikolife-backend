@@ -395,6 +395,8 @@ async def find_all_view(
             field=Recipes.title,
             join_tables=[Recipes.allowed_groups],
             session=session)
+
+        search_recipes = list(filter(lambda x: x.image != None, search_recipes))
         if not current_user or PAYED_GROUP_NAME not in current_user.groups:
             search_recipes = list(filter(lambda x: NOT_AUTHENTICATED_GROUP_NAME in [group.name for group in x.allowed_groups], search_recipes))
         response_model.recipes = [RecipeFindResponseModel(title=i.title, recipe_id=i.id) for i in search_recipes]
@@ -411,5 +413,6 @@ async def find_all_view(
                                                                      field=Ingredients.name, session=session)
         response_model.ingredients = [IngredientFindResponseModel(name=ingredient.name, ingredient_id=ingredient.id) for
                                       ingredient in searh_ingredients]
+
 
         return response_model

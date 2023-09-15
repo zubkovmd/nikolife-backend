@@ -1,11 +1,16 @@
+from typing import List
+
 import sqlalchemy
 
 from app.api.routes.v1.groups.utils import get_group_model_or_create_if_not_exists
 from app.constants import ADMIN_GROUP_NAME, DEV_SUPERUSER_LOGIN, DEV_SUPERUSER_PASSWORD
-from app.database.models.base import Users
 from app.database.manager import DatabaseManagerAsync
 
 from app.log import Loggers
+
+
+def filter_dict_with_key_list(dictionary: dict, key_list: List[str]):
+    return {key: dictionary[key] for key in key_list}
 
 
 async def create_superuser() -> None:
@@ -14,6 +19,7 @@ async def create_superuser() -> None:
 
     :return: None
     """
+    from app.database.models.base import Users
     logger = Loggers.get_default_logger()
     logger.info("Creating superuser")
     async with DatabaseManagerAsync.get_instance().get_session() as session:

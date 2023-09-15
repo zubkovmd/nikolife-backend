@@ -4,7 +4,7 @@ Module contains sqlalchemy models for entire service.
 import datetime
 from typing import Optional, TypeVar, List
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, DateTime, text, ForeignKey, Table, Float
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +14,12 @@ from starlette import status
 
 from app.api.routes.default_response_models import GroupWithExpirationTime, DefaultResponse
 from app.api.routes.v1.recipes.utility_classes import CreateRecipeIngredientRequestModel
+from app.api.routes.v1.utils.service_models import UserModel
+from app.api.routes.v1.utils.utility import build_full_path
+from app.constants import ADMIN_GROUP_NAME
+from app.log import default_logger
+from app.utils import S3Manager
+from app.utils.utility import filter_dict_with_key_list
 
 Base = declarative_base()
 
@@ -948,6 +954,135 @@ class Articles(Base):
     """Users model link of user that creates this article"""
     text = Column(String, nullable=False)
     """article text"""
+
+    @classmethod
+    async def get_all(cls, session: AsyncSession, limit: Optional[int]):
+        stmt = (
+            sqlalchemy.select(Articles)
+            .order_by(Articles.id.desc())
+            .options(selectinload(Articles.user))
+        )
+        if limit:
+            stmt = stmt.limit(limit)
+        response = await session.execute(stmt)
+        articles: List[Articles] = response.scalars().all()
+        return articles
+    @classmethod
+    async def get_by_id(cls, session: AsyncSession, article_id: int) -> ArticlesTypeVar:
+        """
+        Method search article by passed id. If article not found, then it throws
+        404_NOT_FOUND exception
+
+        :param session: SQLAlchemy AsyncSession object.
+        :param article_id: Id of article.
+        :return: Found article.
+        :raises HTTPException: If article was not found
+        """
+        response = await session.execute(sqlalchemy.select(Articles).filter(Articles.id == article_id))
+        article = response.scalars().first()
+        if not article:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Статья не найдена")
+        return article
+    
+    @classmethod
+    async def create(
+            cls,
+            session: AsyncSession,
+            title: str,
+            image: UploadFile,
+            subtitle: str,
+            article_text: str,
+            creator: Users
+    ) -> None:
+        """
+        Method creates new article
+
+        :param session: SqlAlchemy AsyncSession object
+        :param title: Article title
+        :param image: Article image
+        :param subtitle: Article subtitle
+        :param article_text: Article text
+        :param creator: User that creates article
+        :return: None
+        """
+        filename = build_full_path(f"{creator.username}/blog", image)
+        S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+
+        new_article = Articles(
+            title=title,
+            subtitle=subtitle,
+            text=article_text,
+            image=filename,
+            user=creator
+        )
+        session.add(new_article)
+        default_logger.info(f"Article created: {new_article.__dict__} ")
+
+    @classmethod
+    async def update(cls,
+                     session: AsyncSession,
+                     article_id: int,
+                     title: Optional[str],
+                     image: Optional[UploadFile],
+                     subtitle: Optional[str],
+                     article_text: Optional[str],
+                     username: str
+                     ) -> ArticlesTypeVar:
+        """
+        Method updates article
+
+        :param session: SQLAlchemy AsyncSession object.
+        :param article_id: Article id
+        :param title: New article title
+        :param image: New article image
+        :param subtitle: New article subtitle
+        :param article_text: New article text
+        :param username: Username
+        :return: None
+        :raises HTTPException: If article was not fond
+        """
+        article: Articles = await Articles.get_by_id(session=session, article_id=article_id)
+        if title:
+            article.title = title
+        if image:
+            filename = build_full_path(f"{username}/blog", image)
+            S3Manager.get_instance().send_image_shaped(image=image, base_filename=filename)
+            article.image = filename
+        if subtitle:
+            article.subtitle = subtitle
+        if article_text:
+            article.text = article_text
+        return article
+
+    @classmethod
+    async def delete(cls, session: AsyncSession, article_id: int) -> None:
+        """
+        Deletes article from database
+
+        :param session: SqlAlchemy AsyncSession object
+        :param article_id: Article id
+        :return:
+        """
+        article: Articles = await Articles.get_by_id(session=session, article_id=article_id)
+        await session.delete(article)
+        default_logger.debug(f"Article {article.id=}, {article.title} was deleted")
+
+    @classmethod
+    async def user_allowed_to_modify_article(cls, session: AsyncSession, article_id: int, user: UserModel) -> bool:
+        """
+        Check is user allowed to modify article (if user is admin or article was created by user)
+
+        :param user:
+        :param session: SqlAlchemy AsyncSession object
+        :param article_id: Article id
+        :return: Verdict
+        :raises HTTPException: If user not allowed
+        """
+        article = await Articles.get_by_id(session=session, article_id=article_id)
+        if not user.id == article.user_id and ADMIN_GROUP_NAME not in user.groups:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail=f"Вы не можете редактировать данную статью")
+        return True
 
     def __str__(self):
         """string represent of model"""

@@ -34,7 +34,7 @@ app = fastapi.FastAPI()
 async def add_process_time_header(request, call_next):
     start_time = time.time()
     response = await call_next(request)
-    print("Time took to process the request and return response is {} sec".format(time.time() - start_time))
+    # print("Time took to process the request and return response is {} sec".format(time.time() - start_time))
     return response
 # Instrumentator().instrument(app).expose(app)
 app.add_middleware(

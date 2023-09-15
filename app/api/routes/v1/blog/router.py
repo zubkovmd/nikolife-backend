@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.routes.default_response_models import DefaultResponse
 from app.api.routes.v1.blog.models import GetStoriesResponseModel, GetArticlesResponseModel
-from app.api.routes.v1.blog.views.articles import put_article_view, get_articles_view, update_article_view, \
+from app.api.routes.v1.blog.views.articles import create_article_view, get_articles_view, update_article_view, \
     delete_article_view
 from app.api.routes.v1.blog.views.stories import get_stories_view, put_story_view, delete_story_view
 from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token
@@ -105,7 +105,7 @@ async def put_article(
         subtitle: str = Form(...),
         text: str = Form(...),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        current_user: UserModel = Depends(get_admin_by_token),
 ) -> DefaultResponse:
     """
     Route that creates new article.
@@ -118,8 +118,9 @@ async def put_article(
     :param current_user: Object of user that creates article. (FastAPI dependency)
     :return: None
     """
-    return await put_article_view(
-        current_user=current_user,
+    current_user.log_info(f"Called /put_article with parameters: {title=} {subtitle=}")
+    return await create_article_view(
+        admin_user=current_user,
         session=session,
         title=title,
         subtitle=subtitle,
@@ -135,7 +136,7 @@ async def update_article(
         subtitle: str = Form(...),
         text: str = Form(...),
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        admin_user: UserModel = Depends(get_admin_by_token),
 ) -> DefaultResponse:
     """
     Route that creates new article.
@@ -146,12 +147,13 @@ async def update_article(
     :param subtitle: Article subtitle
     :param text: Article text
     :param session: SQLAlchemy session object. (FastAPI dependency)
-    :param current_user: Object of user that creates article. (FastAPI dependency)
+    :param admin_user: Object of user that creates article. (FastAPI dependency)
     :return: None
     """
+    admin_user.log_info("Called /update_article")
     return await update_article_view(
         article_id=article_id,
-        current_user=current_user,
+        admin_user=admin_user,
         session=session,
         title=title,
         subtitle=subtitle,
@@ -163,21 +165,18 @@ async def update_article(
 async def delete_article(
         article_id: int,
         session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object),
-        current_user: UserModel = Depends(get_user_by_token),
+        admin_user: UserModel = Depends(get_admin_by_token),
 ) -> DefaultResponse:
     """
     Route that creates new article.
 
     :param article_id: id of updating article
-    :param title: Article title
-    :param image: Article image
-    :param subtitle: Article subtitle
-    :param text: Article text
     :param session: SQLAlchemy session object. (FastAPI dependency)
-    :param current_user: Object of user that creates article. (FastAPI dependency)
+    :param admin_user: Object of user that creates article. (FastAPI dependency)
     :return: None
     """
+    admin_user.log_info(f"Called /delete_article {article_id=}")
     return await delete_article_view(
         article_id=article_id,
-        current_user=current_user,
+        current_user=admin_user,
         session=session)

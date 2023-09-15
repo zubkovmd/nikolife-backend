@@ -5,8 +5,6 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.database.models.base import Groups
-
 
 async def add_group(group_name: str, session: AsyncSession):
     """
@@ -17,6 +15,7 @@ async def add_group(group_name: str, session: AsyncSession):
     :param session: SQLAlchemy session object
     :return: None
     """
+    from app.database.models.base import Groups
     resp = await session.execute(sqlalchemy.select(Groups).where(Groups.name == group_name).limit(1))
     group_exists = resp.scalars().first()
     if group_exists:
@@ -35,6 +34,7 @@ async def remove_group(group_name: str, session: AsyncSession):
     :param session: SQLAlchemy session object
     :return: None
     """
+    from app.database.models.base import Groups
     resp = await session.execute(sqlalchemy.select(Groups).where(Groups.name == group_name).limit(1))
     group = resp.scalars().first()
     if not group:
@@ -53,6 +53,7 @@ async def change_group_name(old_group_name: str, new_group_name: str, session: A
     :param session: SQLAlchemy session object
     :return: None
     """
+    from app.database.models.base import Groups
     resp = await session.execute(sqlalchemy.select(Groups).where(Groups.name == old_group_name).limit(1))
     group = resp.scalars().first()
     if not group:
@@ -70,6 +71,7 @@ async def get_group_model_or_create_if_not_exists(group_name: str, session):
     :param session: SQLAlchemy AsyncSession object
     :return: Groups mapped object
     """
+    from app.database.models.base import Groups
     stmt = sqlalchemy.select(Groups).where(Groups.name == group_name)
     response = await session.execute(stmt)
     found_group = response.scalars().first()

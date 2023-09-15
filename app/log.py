@@ -2,17 +2,13 @@
 
 import logging
 
-from typing import List
+from typing import List, TypeVar
 
-logging.basicConfig(
-    format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
-    datefmt="%Y.%m.%d %H:%M:%S",
-)
-
+_LoggerTypeVar = TypeVar("_LoggerTypeVar", bound="_Logger")
 
 class _Logger:
     """Default logger class"""
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> _LoggerTypeVar:
         """Logger instance initializer"""
         self.name: str = name
         self.logger: logging.Logger = logging.getLogger(name)
@@ -21,6 +17,9 @@ class _Logger:
 class Loggers:
     """Named loggers container"""
     loggers: List[_Logger] = []
+    format = "[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s"
+    date_format = "%Y.%m.%d %H:%M:%S"
+    level = logging.DEBUG
 
     @classmethod
     def get_named_logger(cls, name) -> logging.Logger:
@@ -35,7 +34,11 @@ class Loggers:
             return named_logger[0].logger
         else:
             new_logger = _Logger(name)
-            cls.loggers.append(_Logger(name))
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter(fmt=Loggers.format, datefmt=Loggers.date_format))
+            handler.setLevel(Loggers.level)
+            new_logger.logger.addHandler(handler)
+            cls.loggers.append(new_logger)
             return new_logger.logger
 
     @classmethod
