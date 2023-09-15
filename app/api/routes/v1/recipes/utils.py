@@ -237,11 +237,14 @@ def build_recipes_output(recipes: list[Recipes], current_user: Optional[UserMode
     :param current_user: User information object
     :return: List of formatted recipes
     """
-    user_groups = current_user.groups if current_user else [NOT_AUTHENTICATED_GROUP_NAME]
-    if ADMIN_GROUP_NAME not in user_groups:
+    user_groups = current_user.groups if current_user else None
+    user_groups_names = [NOT_AUTHENTICATED_GROUP_NAME]
+    if user_groups:
+        user_groups_names = [group.name for group in user_groups]
+    if ADMIN_GROUP_NAME not in user_groups_names:
         recipes = list(filter(lambda x: x.image is not None, recipes))
 
-    if PAYED_GROUP_NAME not in user_groups or ADMIN_GROUP_NAME not in user_groups:
+    if PAYED_GROUP_NAME not in user_groups_names or ADMIN_GROUP_NAME not in user_groups_names:
         recipes = list(filter(lambda x: PAYED_GROUP_NAME not in x.allowed_groups, recipes))
 
     recipes_to_return = []
