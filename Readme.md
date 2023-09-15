@@ -3,6 +3,12 @@
 ## Product architecture
 ![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/product_architecture.jpeg)
 ## Demo
+Now you can get this app with App Store or Google Play Market
+
+Get it on [App Store](https://apps.apple.com/ru/app/nikolife-%D0%B7%D0%B4%D0%BE%D1%80%D0%BE%D0%B2%D1%8B%D0%B5-%D1%80%D0%B5%D1%86%D0%B5%D0%BF%D1%82%D1%8B/id6444793400)
+
+Get it On [Google play Market](https://play.google.com/store/apps/details?id=nikolife.recipes)
+
 ![](https://github.com/maxonclaxon/nikolife-backend/blob/master/readme_files/app_demo.gif)
 
 ## Run
