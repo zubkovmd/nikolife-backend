@@ -6,6 +6,7 @@ from typing import List, Optional, Union
 
 from fastapi import Depends, UploadFile, Form, File, APIRouter, Body, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from app.api.routes.default_response_models import DefaultResponse, DefaultResponseWithPayload
 from app.api.routes.v1.recipes.utility_classes import (
@@ -27,7 +28,7 @@ from app.api.routes.v1.utils.auth import get_user_by_token, get_admin_by_token, 
 from app.api.routes.v1.utils.service_models import UserModel
 from app.api.routes.v1.utils.utility import build_full_path
 from app.database import DatabaseManagerAsync
-from app.database.models.base import RecipeCategories
+from app.database.models.base import RecipeCategories, Ingredients
 from app.utils import S3Manager
 
 router = APIRouter(prefix="/recipes")
@@ -450,6 +451,26 @@ async def get_ingredients(
     :return: Response with list of ingredients.
     """
     return await get_ingredients_view(session)
+
+
+@router.delete("/utils/delete_ingredient")
+async def delete_ingredient(
+        ingredient_id: int,
+        session: AsyncSession = Depends(DatabaseManagerAsync.get_instance().get_session_object)
+):
+    """
+    Route will delete  ingredients registered in this service
+
+    :param ingredient_id: Ingredient id
+    :param session: SqlAlchemy AsyncSession object
+    :return: Nothing
+    """
+    ingredient = await Ingredients.get_by_id(ingredient_id=ingredient_id, session=session)
+    if not ingredient:
+        return DefaultResponse(status_code=status.HTTP_404_NOT_FOUND, detail="Ингредиент не найден")
+    await session.delete(ingredient)
+    await session.commit()
+    return DefaultResponse(status_code=200, detail="Ингредиент удален")
 
 
 @router.get("/utils/get_available_ingredients_with_groups", response_model=GetIngredientsWithGroupsResponseModel)

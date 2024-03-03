@@ -231,15 +231,21 @@ async def get_ingredients_view(session: AsyncSession) -> GetIngredientsResponseM
     :param session: SQLAlchemy AsyncSession object.
     :return: Response with existing ingredients.
     """
-    async with session.begin():
-        stmt = sqlalchemy.select(Ingredients.name)
+    async with (session.begin()):
+        stmt = sqlalchemy.select(Ingredients)
         response = await session.execute(stmt)
-        ingredients: List[str] = response.fetchall()
-        if ingredients:
-            ingredients = [i[0] for i in ingredients]
+        loaded_ingredients: List[Ingredients] = response.fetchall()
+        if loaded_ingredients:
+            output_ingredients: List[IngredientFindResponseModel] = [
+                IngredientFindResponseModel(
+                    name = ingredient[0].name,
+                    ingredient_id = ingredient[0].id
+                )
+                for ingredient in loaded_ingredients
+            ]
         else:
-            ingredients = []
-        return GetIngredientsResponseModel(ingredients=ingredients)
+            output_ingredients: List[IngredientFindResponseModel] = []
+        return GetIngredientsResponseModel(ingredients=output_ingredients)
 
 
 async def get_ingredients_with_groups_view(session: AsyncSession) -> GetIngredientsWithGroupsResponseModel:

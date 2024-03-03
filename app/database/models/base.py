@@ -474,6 +474,24 @@ class Ingredients(Base):
         session.add(new_ingredient_model)
         return new_ingredient_model
 
+    @classmethod
+    async def get_by_id(cls, ingredient_id: int, session: AsyncSession) \
+            -> IngredientsTypeVar:
+        """
+        Method return ingredient by passed name. If ingredient does not exist, then it will be created.
+        Ingredient groups will be added too.
+        For additional info check app.database.models.base -> Ingredients.
+
+        :param ingredient: ingredient name.
+        :param session: SQLAlchemy AsyncSession object.
+        :return: Ingredient group mapped object.
+        """
+        stmt = sqlalchemy.select(Ingredients).where(Ingredients.id == ingredient_id)
+        response = await session.execute(stmt)
+        found_ingredient = response.scalars().first()
+        return found_ingredient
+
+
 
 class RecipeDimensions(Base):
     """

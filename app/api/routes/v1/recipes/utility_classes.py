@@ -197,7 +197,7 @@ class GetRecipesResponseModel(BaseModel):
 
 class GetIngredientsResponseModel(BaseModel):
     """Model for listed available ingredients response"""
-    ingredients: List[str]
+    ingredients: List[IngredientFindResponseModel]
 
 
 class IngredientWithGroupResponseModel(BaseModel):
