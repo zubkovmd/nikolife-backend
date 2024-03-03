@@ -1,7 +1,7 @@
 """Service constants"""
 
 # api token expire minutes
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 100
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 365 * 5
 # group name for is_admin checks
 ADMIN_GROUP_NAME = "admin"
 # default user group name (sets this group for new users)
