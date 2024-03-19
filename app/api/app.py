@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from prometheus_fastapi_instrumentator import Instrumentator
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from uvicorn.config import LOGGING_CONFIG
 
 from app.api.admin import create_admin
 from app.api.routes.root import router
@@ -26,6 +27,8 @@ if settings.sentry:
         # We recommend adjusting this value in production,
         traces_sample_rate=1.0,
     )
+
+LOGGING_CONFIG["formatters"]["default"]["fmt"] = "%(asctime)s [%(name)s] %(levelprefix)s %(message)s"
 
 app = fastapi.FastAPI()
 
